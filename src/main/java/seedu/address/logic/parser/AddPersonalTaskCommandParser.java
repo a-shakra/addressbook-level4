@@ -47,11 +47,9 @@ public class AddPersonalTaskCommandParser implements Parser<AddPersonalTaskComma
 
             return new AddPersonalTaskCommand(new PersonalTask(taskDateTime, duration, description));
         } catch (DateTimeParseException dtpe) {
-            throw new ParseException(MESSAGE_INVALID_DATE_TIME + "\n"
-                    + AddPersonalTaskCommand.MESSAGE_USAGE);
+            throw new ParseException(MESSAGE_INVALID_DATE_TIME);
         } catch (DurationParseException dpe) {
-            throw new ParseException(MESSAGE_INVALID_DURATION + "\n"
-                    + AddPersonalTaskCommand.MESSAGE_USAGE);
+            throw new ParseException(MESSAGE_INVALID_DURATION);
         }
     }
 }

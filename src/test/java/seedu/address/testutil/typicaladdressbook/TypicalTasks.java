@@ -39,30 +39,6 @@ public class TypicalTasks {
             .withDateTime("28/02/2019 14:30").withDuration("3h0m").withDescription("yoga")
             .buildPersonalTask();
 
-    // Tuition with same tutee but different timing
-    public static final TuitionTask TASK_ALICE_SAME_DAY = new TaskBuilder().withTuteeName("Alice Pauline")
-            .withDateTime("01/10/2018 17:00").withDuration("0h45m").buildTuitionTask();
-    public static final TuitionTask TASK_ALICE_DIFFERENT_DAY = new TaskBuilder().withTuteeName("Alice Pauline")
-            .withDateTime("30/09/2018 10:00").withDuration("2h0m").buildTuitionTask();
-
-    //Tuition with time clash
-    public static final TuitionTask TASK_DANIEL_CLASHES_ALICE = new TaskBuilder().withTuteeName("Daniel Meier")
-            .withDateTime("01/10/2018 11:00").withDuration("2h0m").buildTuitionTask();
-
-    //Personal task clashes tuition
-    public static final PersonalTask TASK_GROCERRY_SHOPPING_CLASHES_ALICE = new TaskBuilder()
-            .withDateTime("01/10/2018 10:00").withDuration("2h0m").withDescription("Calculus page 24")
-            .buildPersonalTask();
-
-    //Tuition which start right after another tuition ends
-    public static final TuitionTask TASK_CARL_AFTER_ALICE = new TaskBuilder().withTuteeName("Carl Kurtz")
-            .withDateTime("01/10/2018 12:00").withDuration("1h0m").buildTuitionTask();
-
-    //Personal task which start right after another tuition ends
-    public static final PersonalTask TASK_YOGA_AFTER_ALICE = new TaskBuilder()
-            .withDateTime("01/10/2018 12:00").withDuration("3h0m").withDescription("yoga")
-            .buildPersonalTask();
-
     // Manually added - Task details found in {@code CommandTestUtil}
     public static final TuitionTask TASK_AMY = new TaskBuilder().withTuteeName(VALID_NAME_AMY)
             .withDateTime(VALID_DATE_TIME_AMY).withDuration(VALID_DURATION_AMY).withDescription(VALID_TASK_DESC_AMY)

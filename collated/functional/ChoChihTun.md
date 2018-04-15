@@ -75,7 +75,7 @@ public class AddTuteeCommand extends UndoableCommand {
         try {
             model.addPerson(toAdd);
             return new CommandResult(String.format(MESSAGE_SUCCESS, toAdd));
-        } catch (DuplicatePersonException e) {
+        } catch (DuplicatePersonException dpe) {
             throw new CommandException(MESSAGE_DUPLICATE_PERSON);
         }
 
@@ -140,6 +140,106 @@ public class ChangeCommand extends Command {
 
 }
 ```
+###### \java\seedu\address\logic\commands\EditCommand.java
+``` java
+    /**
+     * Checks if fields to be edited is valid for a person object
+     *
+     * @return true if fields to edit are valid for a person object
+     *         false if fields to edit are invalid for a person object
+     */
+    private boolean isEditPersonFieldValid() {
+        Tag tuteeTag = new Tag(TUTEE_TAG_NAME);
+        return !editPersonDescriptor.isAnyTuteeFieldEdited()
+                && isEditedPersonTagValid(tuteeTag);
+    }
+
+    /**
+     * Checks if edited tag for person object is valid
+     *
+     * @param tuteeTag tutee tag is invalid for a person object
+     * @return true if edited tag is valid or tag is not being edited
+     *         false if new tag is a tutee tag which is invalid for person
+     */
+    private boolean isEditedPersonTagValid(Tag tuteeTag) {
+        if (editPersonDescriptor.isTagEdited()) {
+            return !editPersonDescriptor.tags.contains(tuteeTag);
+        }
+        return true;
+    }
+```
+###### \java\seedu\address\logic\commands\EditCommand.java
+``` java
+        if (personToEdit instanceof Tutee) {
+            Subject updatedSubject = editPersonDescriptor.getSubject().orElse(((Tutee) personToEdit).getSubject());
+            Grade updatedGrade = editPersonDescriptor.getGrade().orElse(((Tutee) personToEdit).getGrade());
+            EducationLevel updatedEducationalLevel = editPersonDescriptor.getEducationalLevel()
+                    .orElse(((Tutee) personToEdit).getEducationLevel());
+            School updatedSchool = editPersonDescriptor.getSchool().orElse(((Tutee) personToEdit).getSchool());
+
+            return new Tutee(updatedName, updatedPhone, updatedEmail, updatedAddress, updatedSubject, updatedGrade,
+                    updatedEducationalLevel, updatedSchool, updatedTags);
+        }
+```
+###### \java\seedu\address\logic\commands\EditCommand.java
+``` java
+        public void setSubject(Subject subject) {
+            this.subject = subject;
+        }
+
+        public Optional<Subject> getSubject() {
+            return Optional.ofNullable(subject);
+        }
+
+        public void setGrade(Grade grade) {
+            this.grade = grade;
+        }
+
+        public Optional<Grade> getGrade() {
+            return Optional.ofNullable(grade);
+        }
+
+        public void setEducationLevel(EducationLevel educationLevel) {
+            this.educationLevel = educationLevel;
+        }
+
+        public Optional<EducationLevel> getEducationalLevel() {
+            return Optional.ofNullable(educationLevel);
+        }
+
+        public void setSchool(School school) {
+            this.school = school;
+        }
+
+        public Optional<School> getSchool() {
+            return Optional.ofNullable(school);
+        }
+```
+###### \java\seedu\address\logic\commands\EditCommand.java
+``` java
+        /**
+         * Checks if tag is being edited
+         *
+         * @return true if tag is being edited
+         *         false if tag is not being edited
+         */
+        public boolean isTagEdited() {
+            return tags != null;
+        }
+
+        /**
+         * Checks if any tutee field is being edited
+         *
+         * @return true if no field is being edited
+         *         false if at least 1 field is being edited
+         */
+        public boolean isAnyTuteeFieldEdited() {
+            return subject != null
+                    || grade != null
+                    || educationLevel != null
+                    || school != null;
+        }
+```
 ###### \java\seedu\address\logic\parser\AddTuteeCommandParser.java
 ``` java
 /**
@@ -173,11 +273,10 @@ public class AddTuteeCommandParser implements Parser<AddTuteeCommand> {
             EducationLevel educationLevel = ParserUtil.parseEducationLevel(
                     argMultimap.getValue(PREFIX_EDUCATION_LEVEL)).get();
             School school = ParserUtil.parseSchool(argMultimap.getValue(PREFIX_SCHOOL)).get();
-            Set<Tag> tagList = new HashSet<>();
-            tagList.add(new Tag("Tutee"));
-            tagList.addAll(ParserUtil.parseTags(argMultimap.getAllValues(PREFIX_TAG)));
+            Set<Tag> tagList = ParserUtil.parseTuteeTags(argMultimap.getAllValues(PREFIX_TAG));
 
             Tutee person = new Tutee(name, phone, email, address, subject, grade, educationLevel, school, tagList);
+
             return new AddTuteeCommand(person);
         } catch (IllegalValueException ive) {
             throw new ParseException(ive.getMessage(), ive);
@@ -249,6 +348,17 @@ public class ChangeCommandParser implements Parser<ChangeCommand> {
     }
 }
 ```
+###### \java\seedu\address\logic\parser\exceptions\DurationParseException.java
+``` java
+/**
+ * Signals that the input duration format is invalid
+ */
+public class DurationParseException extends Exception {
+    public DurationParseException(String message) {
+        super(message);
+    }
+}
+```
 ###### \java\seedu\address\logic\parser\exceptions\SameTimeUnitException.java
 ``` java
 /**
@@ -263,6 +373,48 @@ public class SameTimeUnitException extends Exception {
 ```
 ###### \java\seedu\address\logic\parser\ParserUtil.java
 ``` java
+    /**
+     * Parses a person's {@code Collection<String> tags} into a {@code Set<Tag>}.
+     */
+    public static Set<Tag> parsePersonTags(Collection<String> tags) throws IllegalValueException {
+        requireNonNull(tags);
+        final Set<Tag> tagSet = new HashSet<>();
+        for (String tagName : tags) {
+            // a person should not have tutee tag
+            if (isTuteeTag(tagName)) {
+                throw new IllegalValueException(String.format(MESSAGE_INVALID_TAG, tagName));
+            }
+            tagSet.add(parseTag(tagName));
+        }
+        return tagSet;
+    }
+
+    /**
+     * Parses a tutee's {@code Collection<String> tags} into a {@code Set<Tag>}.
+     */
+    public static Set<Tag> parseTuteeTags(Collection<String> tags) throws IllegalValueException {
+        requireNonNull(tags);
+        final Set<Tag> tagSet = new HashSet<>();
+        for (String tagName : tags) {
+            // Tutee tag is added automatically by the Tutee constructor
+            if (!isTuteeTag(tagName)) {
+                tagSet.add(parseTag(tagName));
+            }
+        }
+        return tagSet;
+    }
+
+    /**
+     * Checks if {@code String tagName} is tutee tag name
+     *
+     * @param tagName to be checked
+     * @return true if tagName is tutee tag name
+     *         false if tagName is not tutee tag name
+     */
+    private static boolean isTuteeTag(String tagName) {
+        return tagName.toLowerCase().equals(TUTEE_TAG_NAME.toLowerCase());
+    }
+
     /**
      * Parses a {@code String subject} into an {@code Subject}.
      * Leading and trailing whitespaces will be trimmed.
@@ -380,32 +532,6 @@ public class SameTimeUnitException extends Exception {
     }
 
 ```
-###### \java\seedu\address\model\person\exceptions\DurationParseException.java
-``` java
-/**
- * Signals that the input duration format is invalid
- */
-public class DurationParseException extends Exception {
-    public DurationParseException(String message) {
-        super(message);
-    }
-}
-```
-###### \java\seedu\address\model\person\exceptions\TimingClashException.java
-``` java
-
-import seedu.address.commons.exceptions.DuplicateDataException;
-
-/**
- * Signals that there is a clash of timing in the schedule or there is a duplicate task
- */
-public class TimingClashException extends DuplicateDataException {
-
-    public TimingClashException(String message) {
-        super(message);
-    }
-}
-```
 ###### \java\seedu\address\model\personal\PersonalTask.java
 ``` java
 /**
@@ -416,9 +542,9 @@ public class PersonalTask implements Task {
     private static final String HOUR_DELIMITER = "h";
     private static final String MINUTE_DELIMITER = "m";
     private static final String NULL_STRING = "";
+
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm")
             .withResolverStyle(ResolverStyle.STRICT);
-
     private String description;
     private String duration;
     private LocalDateTime taskDateTime;
@@ -504,6 +630,17 @@ public class PersonalTask implements Task {
     }
 
 ```
+###### \java\seedu\address\model\task\exceptions\TimingClashException.java
+``` java
+/**
+ * Signals that there is a clash of timing in the schedule or there is a duplicate task
+ */
+public class TimingClashException extends DuplicateDataException {
+    public TimingClashException() {
+        super(MESSAGE_TASK_TIMING_CLASHES);
+    }
+}
+```
 ###### \java\seedu\address\model\tutee\EducationLevel.java
 ``` java
 /**
@@ -564,7 +701,7 @@ public class EducationLevel {
 public class Grade {
 
     public static final String MESSAGE_GRADE_CONSTRAINTS =
-            "Grade should start with alphabetic characters and followed by any character or blank, "
+            "Grade should start with an alphabetic character and followed by any character (ONLY ONE) or blank, "
             + "and it should not be blank";
     public static final String GRADE_VALIDATION_REGEX = "[\\p{Alpha}].??";
 
@@ -814,14 +951,20 @@ public class TuitionTask implements Task {
         return taskDateTime.format(formatter);
     }
 
+    public String getTuitionTitle() {
+        return String.format(TUITION_TITLE, tutee);
+    }
+
 ```
 ###### \java\seedu\address\model\tutee\Tutee.java
 ``` java
 /**
- * Represents a Tutee in the address book.
+ * Represents a tutee in the address book.
  * Guarantees: details are present and not null, field values are validated, immutable.
  */
 public class Tutee extends Person {
+    private static final String TUTEE_TAG_NAME = "Tutee";
+
     private Subject subject;
     private Grade grade;
     private EducationLevel educationLevel;
@@ -837,6 +980,17 @@ public class Tutee extends Person {
         this.grade = grade;
         this.educationLevel = educationLevel;
         this.school = school;
+
+        // Creates a "Tutee" tag to represent a tutee
+        Tag tuteeTag = new Tag(TUTEE_TAG_NAME);
+        if (!this.tags.contains(tuteeTag)) {
+            try {
+                this.tags.add(tuteeTag);
+            } catch (UniqueTagList.DuplicateTagException e) {
+                // Should not have duplicate tutee tag
+                assert (false);
+            }
+        }
     }
 
     public Subject getSubject() {
@@ -917,10 +1071,11 @@ public class Tutee extends Person {
     public void add(Task toAdd) throws TimingClashException {
         requireNonNull(toAdd);
         if (isTimeClash(toAdd.getTaskDateTime(), toAdd.getDuration())) {
-            throw new TimingClashException(MESSAGE_TASK_TIMING_CLASHES);
+            throw new TimingClashException();
         }
         internalList.add(toAdd);
     }
+
 ```
 ###### \java\seedu\address\model\UniqueTaskList.java
 ``` java
@@ -962,6 +1117,7 @@ public class Tutee extends Person {
         taskEndTime = startDateTime.plusHours(hoursInDuration).plusMinutes(minutesInDuration);
         return taskEndTime;
     }
+
 ```
 ###### \java\seedu\address\ui\CalendarPanel.java
 ``` java

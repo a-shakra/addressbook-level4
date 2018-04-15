@@ -23,18 +23,19 @@ public class GradeTest {
 
     @Test
     public void isValidGrade() {
-        // null subject grade
+        // null grade
         Assert.assertThrows(NullPointerException.class, () -> Grade.isValidGrade(null));
 
-        // invalid subject grade
+        // invalid grade
         assertFalse(Grade.isValidGrade("")); // empty string
         assertFalse(Grade.isValidGrade(" ")); // spaces only
         assertFalse(Grade.isValidGrade("9112")); // only contains numbers
         assertFalse(Grade.isValidGrade("pass")); // more than 2 alphabet
         assertFalse(Grade.isValidGrade("+B")); // special character before alphabet
         assertFalse(Grade.isValidGrade("B -")); // spaces within digits
+        assertFalse(Grade.isValidGrade("  B")); // leading whitespace
 
-        // valid subject grade
+        // valid grade
         assertTrue(Grade.isValidGrade("A+")); // 1 alphabet followed by a special character
         assertTrue(Grade.isValidGrade("B")); // only 1 alphabet
         assertTrue(Grade.isValidGrade("b")); // small letter

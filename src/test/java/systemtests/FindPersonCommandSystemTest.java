@@ -45,7 +45,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.AddTuteeCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.FindPersonCommand;
@@ -208,16 +207,7 @@ public class FindPersonCommandSystemTest extends AddressBookSystemTest {
                 + AMYTUTEE.getSubject().toString();
         assertCommandSuccess(command, expectedModel);
         assertSelectedCardUnchanged();
-
         //@@author
-        /* Case: find while a person is selected -> selected card deselected */
-        showAllPersons();
-        selectPerson(Index.fromOneBased(1));
-        assertFalse(getPersonListPanel().getHandleToSelectedCard().getName().equals(DANIEL.getName().fullName));
-        command = FindPersonCommand.COMMAND_WORD + " " + CATEGORY_NAME + " Daniel";
-        ModelHelper.setFilteredList(expectedModel, DANIEL);
-        assertCommandSuccess(command, expectedModel);
-        assertSelectedCardDeselected();
 
         /* Case: find person in empty address book -> 0 persons found */
         deleteAllPersons();

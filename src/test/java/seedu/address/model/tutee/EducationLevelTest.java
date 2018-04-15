@@ -22,23 +22,23 @@ public class EducationLevelTest {
     }
 
     @Test
-    public void isValidPhone() {
-        // null phone number
+    public void isValidEducationLevel() {
+        // null education level
         Assert.assertThrows(NullPointerException.class, () -> EducationLevel.isValidEducationLevel(null));
 
-        // invalid phone numbers
+        // invalid education level
         assertFalse(EducationLevel.isValidEducationLevel("")); // empty string
         assertFalse(EducationLevel.isValidEducationLevel(" ")); // spaces only
         assertFalse(EducationLevel.isValidEducationLevel("91")); // numbers
         assertFalse(EducationLevel.isValidEducationLevel("university")); // not the specified education level
         assertFalse(EducationLevel.isValidEducationLevel("primary5")); // contains number
         assertFalse(EducationLevel.isValidEducationLevel("primary@")); // contains special characters
+        assertFalse(EducationLevel.isValidEducationLevel("  secondary  ")); // multiple leading and trailing whitespaces
 
-        // valid phone numbers
+        // valid education level
         assertTrue(EducationLevel.isValidEducationLevel("primary")); // primary school
         assertTrue(EducationLevel.isValidEducationLevel("secondary")); // secondary school
         assertTrue(EducationLevel.isValidEducationLevel("junior college")); // junior college
         assertTrue(EducationLevel.isValidEducationLevel("SeCoNdaRy")); // Capital
     }
-
 }

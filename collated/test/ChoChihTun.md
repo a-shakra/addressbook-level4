@@ -38,19 +38,22 @@ public class CalendarPanelHandle extends NodeHandle<Node> {
 ```
 ###### \java\seedu\address\logic\commands\AddTuteeCommandTest.java
 ``` java
+/**
+ * Contains integration tests (interaction with the Model) for {@code AddTuteeCommand}.
+ */
 public class AddTuteeCommandTest {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Test
-    public void constructor_nullPerson_throwsNullPointerException() {
+    public void constructor_nullTutee_throwsNullPointerException() {
         thrown.expect(NullPointerException.class);
         new AddTuteeCommand(null);
     }
 
     @Test
-    public void execute_personAcceptedByModel_addSuccessful() throws Exception {
+    public void execute_tuteeAcceptedByModel_addSuccessful() throws Exception {
         ModelStubAcceptingPersonAdded modelStub = new ModelStubAcceptingPersonAdded();
         Tutee validTutee = new TuteeBuilder().build();
 
@@ -72,26 +75,32 @@ public class AddTuteeCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_validArgs_returnsTrue() {
+        Tutee alice = new TuteeBuilder().withName("Alice").build();
+        AddTuteeCommand addAliceCommand = new AddTuteeCommand(alice);
+
+        // same object
+        assertTrue(addAliceCommand.equals(addAliceCommand));
+
+        // objects with same value
+        AddTuteeCommand addAliceCommandCopy = new AddTuteeCommand(alice);
+        assertTrue(addAliceCommand.equals(addAliceCommandCopy));
+    }
+
+    @Test
+    public void equals_invalidArgs_returnsFalse() {
         Tutee alice = new TuteeBuilder().withName("Alice").build();
         Tutee bob = new TuteeBuilder().withName("Bob").build();
         AddTuteeCommand addAliceCommand = new AddTuteeCommand(alice);
         AddTuteeCommand addBobCommand = new AddTuteeCommand(bob);
 
-        // same object -> returns true
-        assertTrue(addAliceCommand.equals(addAliceCommand));
-
-        // same values -> returns true
-        AddTuteeCommand addAliceCommandCopy = new AddTuteeCommand(alice);
-        assertTrue(addAliceCommand.equals(addAliceCommandCopy));
-
-        // different types -> returns false
-        assertFalse(addAliceCommand.equals(1));
-
-        // null -> returns false
+        // null
         assertFalse(addAliceCommand.equals(null));
 
-        // different person -> returns false
+        // wrong parameter data type
+        assertFalse(addAliceCommand.equals(1));
+
+        // different tutee
         assertFalse(addAliceCommand.equals(addBobCommand));
     }
 
@@ -109,6 +118,7 @@ public class AddTuteeCommandTest {
      */
     private class ModelStubThrowingDuplicatePersonException extends ModelStub {
         @Override
+        // A tutee is a person
         public void addPerson(Person person) throws DuplicatePersonException {
             throw new DuplicatePersonException();
         }
@@ -126,6 +136,7 @@ public class AddTuteeCommandTest {
         final ArrayList<Person> personsAdded = new ArrayList<>();
 
         @Override
+        // A tutee is a person
         public void addPerson(Person person) throws DuplicatePersonException {
             requireNonNull(person);
             personsAdded.add(person);
@@ -137,6 +148,127 @@ public class AddTuteeCommandTest {
         }
     }
 
+}
+```
+###### \java\seedu\address\logic\commands\EditCommandTest.java
+``` java
+    @Test
+    public void execute_editTuteeFields_success() {
+        // Address book with typical tutee inside
+        model = new ModelManager(getTypicalAddressBook2(), new UserPrefs());
+
+        Tutee tuteeToEdit = new TuteeBuilder().build();
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder(tuteeToEdit).build();
+        EditCommand editCommand = prepareCommand(INDEX_FIRST_PERSON, descriptor);
+
+        String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS, tuteeToEdit);
+
+        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+
+        assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_invalidTagForPerson_failure() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withTags(TUTEE_TAG).build();
+        EditCommand editCommand = prepareCommand(INDEX_FIRST_PERSON, descriptor);
+        assertCommandFailure(editCommand, model, MESSAGE_INVALID_PERSON_TO_EDIT);
+    }
+
+    @Test
+    public void execute_invalidFieldsEditedForPerson_failure() {
+        // Edit subject
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withSubject(VALID_SUBJECT_AMY).build();
+        EditCommand editCommand = prepareCommand(INDEX_FIRST_PERSON, descriptor);
+        assertCommandFailure(editCommand, model, MESSAGE_INVALID_PERSON_TO_EDIT);
+
+        // Edit grade
+        descriptor = new EditPersonDescriptorBuilder().withGrade(VALID_GRADE_AMY).build();
+        editCommand = prepareCommand(INDEX_FIRST_PERSON, descriptor);
+        assertCommandFailure(editCommand, model, MESSAGE_INVALID_PERSON_TO_EDIT);
+
+        // Edit education level
+        descriptor = new EditPersonDescriptorBuilder().withEducationLevel(VALID_EDUCATION_LEVEL_AMY).build();
+        editCommand = prepareCommand(INDEX_FIRST_PERSON, descriptor);
+        assertCommandFailure(editCommand, model, MESSAGE_INVALID_PERSON_TO_EDIT);
+
+        // Edit school
+        descriptor = new EditPersonDescriptorBuilder().withSchool(VALID_SCHOOL_AMY).build();
+        editCommand = prepareCommand(INDEX_FIRST_PERSON, descriptor);
+        assertCommandFailure(editCommand, model, MESSAGE_INVALID_PERSON_TO_EDIT);
+    }
+```
+###### \java\seedu\address\logic\commands\FindTaskCommandTest.java
+``` java
+/**
+ * Contains integration tests (interaction with the Model) for {@code FindTaskCommand}.
+ */
+public class FindTaskCommandTest {
+    private static final String OCTOBER = "10";
+    private static final String NOVEMBER = "11";
+    private static final String DECEMBER = "12";
+
+    private final String[] monthBetweenKeywords = {OCTOBER, NOVEMBER, DECEMBER};
+    private final String[] monthNamelyKeyword = {OCTOBER};
+
+    private final FindTaskCommand findMonthBetweenKeywordsCommand =
+            new FindTaskCommand(CATEGORY_MONTH, monthBetweenKeywords);
+    private final FindTaskCommand findMonthNamelyKeywordCommand =
+            new FindTaskCommand(CATEGORY_MONTH, monthNamelyKeyword);
+
+    private Model model = new ModelManager(getTypicalAddressBook2(), new UserPrefs());
+
+    @Test
+    public void equals_validArgs_returnsTrue() {
+        // same object
+        assertTrue(findMonthBetweenKeywordsCommand.equals(findMonthBetweenKeywordsCommand));
+
+        // objects with same value
+        FindTaskCommand findMonthBetweenKeywordsCommandCopy = new FindTaskCommand(CATEGORY_MONTH, monthBetweenKeywords);
+        assertTrue(findMonthBetweenKeywordsCommand.equals(findMonthBetweenKeywordsCommandCopy));
+    }
+
+    @Test
+    public void equals_invalidArgs_returnsFalse() {
+        // null
+        assertFalse(findMonthBetweenKeywordsCommand.equals(null));
+
+        // wrong parameter data type
+        assertFalse(findMonthBetweenKeywordsCommand.equals(1));
+
+        // different commands
+        assertFalse(findMonthBetweenKeywordsCommand.equals(findMonthNamelyKeywordCommand));
+    }
+
+    @Test
+    public void execute_findMonth_success() {
+        // between months
+        findMonthBetweenKeywordsCommand.setData(model, new CommandHistory(), new UndoRedoStack());
+        String expectedMessage = String.format(FindTaskCommand.MESSAGE_SUCCESS + "\n"
+                + MESSAGE_TASKS_LISTED_OVERVIEW, 3);
+        assertCommandSuccess(findMonthBetweenKeywordsCommand, expectedMessage,
+                Arrays.asList(TASK_ALICE, TASK_BENSON, TASK_CARL));
+
+        // namely month
+        findMonthNamelyKeywordCommand.setData(model, new CommandHistory(), new UndoRedoStack());
+        expectedMessage = String.format(FindTaskCommand.MESSAGE_SUCCESS + "\n" + MESSAGE_TASKS_LISTED_OVERVIEW, 2);
+        assertCommandSuccess(findMonthNamelyKeywordCommand, expectedMessage, Arrays.asList(TASK_ALICE, TASK_BENSON));
+    }
+
+    /**
+     * Asserts that {@code command} is successfully executed, and<br>
+     *     - the command feedback is equal to {@code expectedMessage}<br>
+     *     - the {@code FilteredList<Task>} is equal to {@code expectedList}<br>
+     *     - the {@code AddressBook} in model remains the same after executing the {@code command}
+     */
+    private void assertCommandSuccess(FindTaskCommand command, String expectedMessage, List<Task> expectedList) {
+        AddressBook expectedAddressBook = new AddressBook(model.getAddressBook());
+        CommandResult commandResult = command.execute();
+
+        assertEquals(expectedMessage, commandResult.feedbackToUser);
+        assertEquals(expectedList, model.getFilteredTaskList());
+        assertEquals(expectedAddressBook, model.getAddressBook());
+    }
 }
 ```
 ###### \java\seedu\address\logic\parser\AddPersonalTaskCommandParserTest.java
@@ -171,24 +303,17 @@ public class AddPersonalTaskCommandParserTest {
                 String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddPersonalTaskCommand.MESSAGE_USAGE));
 
         // Invalid date
-        assertParseFailure(parser, "29/02/2018 11:11 1h30m Outing with friends",
-                MESSAGE_INVALID_DATE_TIME + "\n" + AddPersonalTaskCommand.MESSAGE_USAGE);
-        assertParseFailure(parser, "32/01/2018 11:11 1h30m Outing with friends",
-                MESSAGE_INVALID_DATE_TIME + "\n" + AddPersonalTaskCommand.MESSAGE_USAGE);
-        assertParseFailure(parser, "31/04/2018 11:11 1h30m Outing with friends",
-                MESSAGE_INVALID_DATE_TIME + "\n" + AddPersonalTaskCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, "29/02/2018 11:11 1h30m Outing with friends", MESSAGE_INVALID_DATE_TIME);
+        assertParseFailure(parser, "31/04/2018 11:11 1h30m Outing with friends", MESSAGE_INVALID_DATE_TIME);
+        assertParseFailure(parser, "32/01/2018 11:11 1h30m Outing with friends", MESSAGE_INVALID_DATE_TIME);
 
         // Invalid time
-        assertParseFailure(parser, "11/01/2018 24:00 1h30m Outing with friends",
-                MESSAGE_INVALID_DATE_TIME + "\n" + AddPersonalTaskCommand.MESSAGE_USAGE);
-        assertParseFailure(parser, "11/01/2018 11:60 1h30m Outing with friends",
-                MESSAGE_INVALID_DATE_TIME + "\n" + AddPersonalTaskCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, "11/01/2018 24:00 1h30m Outing with friends", MESSAGE_INVALID_DATE_TIME);
+        assertParseFailure(parser, "11/01/2018 11:60 1h30m Outing with friends", MESSAGE_INVALID_DATE_TIME);
 
         // Invalid duration
-        assertParseFailure(parser, "11/01/2018 11:11 1h60m Outing with friends",
-                MESSAGE_INVALID_DURATION + "\n" + AddPersonalTaskCommand.MESSAGE_USAGE);
-        assertParseFailure(parser, "11/01/2018 11:11 24h0m Outing with friends",
-                MESSAGE_INVALID_DURATION + "\n" + AddPersonalTaskCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, "11/01/2018 11:11 1h60m Outing with friends", MESSAGE_INVALID_DURATION);
+        assertParseFailure(parser, "11/01/2018 11:11 24h0m Outing with friends", MESSAGE_INVALID_DURATION);
     }
 
     @Test
@@ -320,6 +445,9 @@ public class AddTuitionTaskCommandParserTest {
 ```
 ###### \java\seedu\address\logic\parser\AddTuteeCommandParserTest.java
 ``` java
+/**
+ * Contains tests for {@code AddTuteeCommandParser}.
+ */
 public class AddTuteeCommandParserTest {
     private AddTuteeCommandParser parser = new AddTuteeCommandParser();
 
@@ -598,8 +726,106 @@ public class ChangeCommandParserTest {
     }
 }
 ```
+###### \java\seedu\address\logic\parser\EditCommandParserTest.java
+``` java
+        // subject
+        userInput = targetIndex.getOneBased() + SUBJECT_DESC_AMY;
+        descriptor = new EditPersonDescriptorBuilder().withSubject(VALID_SUBJECT_AMY).build();
+        expectedCommand = new EditCommand(targetIndex, descriptor);
+        assertParseSuccess(parser, userInput, expectedCommand);
+
+        // grade
+        userInput = targetIndex.getOneBased() + GRADE_DESC_AMY;
+        descriptor = new EditPersonDescriptorBuilder().withGrade(VALID_GRADE_AMY).build();
+        expectedCommand = new EditCommand(targetIndex, descriptor);
+        assertParseSuccess(parser, userInput, expectedCommand);
+
+        // education level
+        userInput = targetIndex.getOneBased() + EDUCATION_LEVEL_DESC_AMY;
+        descriptor = new EditPersonDescriptorBuilder().withEducationLevel(VALID_EDUCATION_LEVEL_AMY).build();
+        expectedCommand = new EditCommand(targetIndex, descriptor);
+        assertParseSuccess(parser, userInput, expectedCommand);
+
+        // school
+        userInput = targetIndex.getOneBased() + SCHOOL_DESC_AMY;
+        descriptor = new EditPersonDescriptorBuilder().withSchool(VALID_SCHOOL_AMY).build();
+        expectedCommand = new EditCommand(targetIndex, descriptor);
+        assertParseSuccess(parser, userInput, expectedCommand);
+```
 ###### \java\seedu\address\logic\parser\ParserUtilTest.java
 ``` java
+    @Test
+    public void parseTags_collectionWithValidTagsAndTuteeTag_returnsTagSet() throws Exception {
+        Set<Tag> actualTagSet = ParserUtil.parseTags(Arrays.asList(VALID_TAG_1, CAPITAL_TUTEE_TAG));
+        Set<Tag> expectedTagSet = new HashSet<>(Arrays.asList(new Tag(VALID_TAG_1), new Tag(TUTEE_TAG)));
+
+        assertEquals(expectedTagSet, actualTagSet);
+    }
+
+    @Test
+    public void parsePersonTags_null_throwsNullPointerException() throws Exception {
+        thrown.expect(NullPointerException.class);
+        ParserUtil.parsePersonTags(null);
+    }
+
+    @Test
+    public void parsePersonTags_collectionWithInvalidTags_throwsIllegalValueException() throws Exception {
+        thrown.expect(IllegalValueException.class);
+        ParserUtil.parsePersonTags(Arrays.asList(VALID_TAG_1, INVALID_TAG));
+    }
+
+    @Test
+    public void parsePersonTags_emptyCollection_returnsEmptySet() throws Exception {
+        assertTrue(ParserUtil.parsePersonTags(Collections.emptyList()).isEmpty());
+    }
+
+    @Test
+    public void parsePersonTags_collectionWithValidTags_returnsTagSet() throws Exception {
+        Set<Tag> actualTagSet = ParserUtil.parsePersonTags(Arrays.asList(VALID_TAG_1, VALID_TAG_2));
+        Set<Tag> expectedTagSet = new HashSet<>(Arrays.asList(new Tag(VALID_TAG_1), new Tag(VALID_TAG_2)));
+
+        assertEquals(expectedTagSet, actualTagSet);
+    }
+
+    @Test
+    public void parsePersonTags_collectionWithTuteeTags_throwsIllegalValueException() throws Exception {
+        thrown.expect(IllegalValueException.class);
+        ParserUtil.parsePersonTags(Arrays.asList(VALID_TAG_1, TUTEE_TAG));
+    }
+
+    @Test
+    public void parseTuteeTags_null_throwsNullPointerException() throws Exception {
+        thrown.expect(NullPointerException.class);
+        ParserUtil.parseTuteeTags(null);
+    }
+
+    @Test
+    public void parseTuteeTags_collectionWithInvalidTags_throwsIllegalValueException() throws Exception {
+        thrown.expect(IllegalValueException.class);
+        ParserUtil.parseTuteeTags(Arrays.asList(VALID_TAG_1, INVALID_TAG));
+    }
+
+    @Test
+    public void parseTuteeTags_emptyCollection_returnsEmptySet() throws Exception {
+        assertTrue(ParserUtil.parseTuteeTags(Collections.emptyList()).isEmpty());
+    }
+
+    @Test
+    public void parseTuteeTags_collectionWithValidTags_returnsTagSet() throws Exception {
+        Set<Tag> actualTagSet = ParserUtil.parseTuteeTags(Arrays.asList(VALID_TAG_1, VALID_TAG_2));
+        Set<Tag> expectedTagSet = new HashSet<>(Arrays.asList(new Tag(VALID_TAG_1), new Tag(VALID_TAG_2)));
+
+        assertEquals(expectedTagSet, actualTagSet);
+    }
+
+    @Test
+    public void parseTuteeTags_collectionWithValidAndTuteeTags_returnsTagSet() throws Exception {
+        Set<Tag> actualTagSet = ParserUtil.parseTuteeTags(Arrays.asList(VALID_TAG_1, TUTEE_TAG));
+        Set<Tag> expectedTagSet = new HashSet<>(Arrays.asList(new Tag(VALID_TAG_1)));
+
+        assertEquals(expectedTagSet, actualTagSet);
+    }
+
     @Test
     public void parseSubject_null_throwsNullPointerException() {
         Assert.assertThrows(NullPointerException.class, () -> ParserUtil.parseSubject((String) null));
@@ -798,25 +1024,25 @@ public class EducationLevelTest {
     }
 
     @Test
-    public void isValidPhone() {
-        // null phone number
+    public void isValidEducationLevel() {
+        // null education level
         Assert.assertThrows(NullPointerException.class, () -> EducationLevel.isValidEducationLevel(null));
 
-        // invalid phone numbers
+        // invalid education level
         assertFalse(EducationLevel.isValidEducationLevel("")); // empty string
         assertFalse(EducationLevel.isValidEducationLevel(" ")); // spaces only
         assertFalse(EducationLevel.isValidEducationLevel("91")); // numbers
         assertFalse(EducationLevel.isValidEducationLevel("university")); // not the specified education level
         assertFalse(EducationLevel.isValidEducationLevel("primary5")); // contains number
         assertFalse(EducationLevel.isValidEducationLevel("primary@")); // contains special characters
+        assertFalse(EducationLevel.isValidEducationLevel("  secondary  ")); // multiple leading and trailing whitespaces
 
-        // valid phone numbers
+        // valid education level
         assertTrue(EducationLevel.isValidEducationLevel("primary")); // primary school
         assertTrue(EducationLevel.isValidEducationLevel("secondary")); // secondary school
         assertTrue(EducationLevel.isValidEducationLevel("junior college")); // junior college
         assertTrue(EducationLevel.isValidEducationLevel("SeCoNdaRy")); // Capital
     }
-
 }
 ```
 ###### \java\seedu\address\model\tutee\GradeTest.java
@@ -836,18 +1062,19 @@ public class GradeTest {
 
     @Test
     public void isValidGrade() {
-        // null subject grade
+        // null grade
         Assert.assertThrows(NullPointerException.class, () -> Grade.isValidGrade(null));
 
-        // invalid subject grade
+        // invalid grade
         assertFalse(Grade.isValidGrade("")); // empty string
         assertFalse(Grade.isValidGrade(" ")); // spaces only
         assertFalse(Grade.isValidGrade("9112")); // only contains numbers
         assertFalse(Grade.isValidGrade("pass")); // more than 2 alphabet
         assertFalse(Grade.isValidGrade("+B")); // special character before alphabet
         assertFalse(Grade.isValidGrade("B -")); // spaces within digits
+        assertFalse(Grade.isValidGrade("  B")); // leading whitespace
 
-        // valid subject grade
+        // valid grade
         assertTrue(Grade.isValidGrade("A+")); // 1 alphabet followed by a special character
         assertTrue(Grade.isValidGrade("B")); // only 1 alphabet
         assertTrue(Grade.isValidGrade("b")); // small letter
@@ -887,7 +1114,7 @@ public class SchoolTest {
         // valid school name
         assertTrue(School.isValidSchool("victoria junior college")); // alphabets only
         assertTrue(School.isValidSchool("Victoria Junior College")); // with capital letters
-        assertTrue(School.isValidSchool("The longest name school primary school")); // long subject name
+        assertTrue(School.isValidSchool("The longest name school primary school")); // long school name
     }
 
 }
@@ -986,7 +1213,6 @@ public class UniqueTaskListTest {
         } catch (TimingClashException e) {
             throw new AssertionError("Should not have any clashed timing");
         }
-
         // New task starts at the same time as an existing task
         Assert.assertThrows(TimingClashException.class, () ->
                 uniqueTaskList.add(new PersonalTask(
@@ -1031,16 +1257,71 @@ public class UniqueTaskListTest {
     }
 }
 ```
+###### \java\seedu\address\testutil\EditPersonDescriptorBuilder.java
+``` java
+    /**
+     * Returns an {@code EditPersonDescriptor} with fields containing {@code tutee}'s details
+     */
+    public EditPersonDescriptorBuilder(Tutee tutee) {
+        descriptor = new EditPersonDescriptor();
+        descriptor.setName(tutee.getName());
+        descriptor.setPhone(tutee.getPhone());
+        descriptor.setEmail(tutee.getEmail());
+        descriptor.setAddress(tutee.getAddress());
+        descriptor.setSubject(tutee.getSubject());
+        descriptor.setGrade(tutee.getGrade());
+        descriptor.setEducationLevel(tutee.getEducationLevel());
+        descriptor.setSchool(tutee.getSchool());
+        descriptor.setTags(tutee.getTags());
+    }
+```
+###### \java\seedu\address\testutil\EditPersonDescriptorBuilder.java
+``` java
+    /**
+     * Sets the {@code Subject} of the {@code EditPersonDescriptor} that we are building.
+     */
+    public EditPersonDescriptorBuilder withSubject(String subject) {
+        descriptor.setSubject(new Subject(subject));
+        return this;
+    }
+
+    /**
+     * Sets the {@code Grade} of the {@code EditPersonDescriptor} that we are building.
+     */
+    public EditPersonDescriptorBuilder withGrade(String grade) {
+        descriptor.setGrade(new Grade(grade));
+        return this;
+    }
+
+
+    /**
+     * Sets the {@code EducationLevel} of the {@code EditPersonDescriptor} that we are building.
+     */
+    public EditPersonDescriptorBuilder withEducationLevel(String educationLevel) {
+        descriptor.setEducationLevel(new EducationLevel(educationLevel));
+        return this;
+    }
+
+
+    /**
+     * Sets the {@code School} of the {@code EditPersonDescriptor} that we are building.
+     */
+    public EditPersonDescriptorBuilder withSchool(String school) {
+        descriptor.setSchool(new School(school));
+        return this;
+    }
+```
 ###### \java\seedu\address\testutil\TuteeBuilder.java
 ``` java
 /**
  * A utility class to help with building Tutee objects.
  */
 public class TuteeBuilder extends PersonBuilder {
-    public static final String DEFAULT_SUBJECT = "social studies";
-    public static final String DEFAULT_GRADE = "B-";
-    public static final String DEFAULT_EDUCATION_LEVEL = "primary";
-    public static final String DEFAULT_SCHOOL = "fengshan primary school";
+    public static final String DEFAULT_SUBJECT = "mathematics";
+    public static final String DEFAULT_GRADE = "C+";
+    public static final String DEFAULT_EDUCATION_LEVEL = "secondary";
+    public static final String DEFAULT_SCHOOL = "fengshan secondary school";
+    public static final String TUTEE_TAG = "Tutee";
 
     private Subject subject;
     private Grade grade;
@@ -1057,7 +1338,7 @@ public class TuteeBuilder extends PersonBuilder {
         educationLevel = new EducationLevel(DEFAULT_EDUCATION_LEVEL);
         school = new School(DEFAULT_SCHOOL);
         tags = SampleDataUtil.getTagSet(DEFAULT_TAGS);
-        tags.add(new Tag("Tutee"));
+        tags.add(new Tag(TUTEE_TAG));
     }
 
     /**
@@ -1193,18 +1474,20 @@ public class TuteeUtil {
  */
 public class TypicalTutees {
 
+    // Manually added
     public static final Tutee ALICETUTEE = new TuteeBuilder().withName("Alice Pauline")
-            .withAddress("123, Jurong West Ave 6, #08-111").withEmail("alice@example.com")
+            .withAddress("123, Jurong West Ave 6, #08-111").withEmail("alice@gmail.com")
             .withPhone("85355255").withSubject("mathematics").withGrade("C+").withEducationLevel("secondary")
-            .withSchool("nanhua high school").withTags("friends").build();
+            .withSchool("fengshan secondary school").withTags("friends").build();
+
     public static final Tutee CARLTUTEE = new TuteeBuilder().withName("Carl Kurz").withPhone("95352563")
             .withEmail("heinz@example.com").withAddress("wall street").withSubject("history").withGrade("B")
             .withEducationLevel("secondary").withSchool("wall street high school").build();
 
-    // Manually added
     public static final Tutee HOONTUTEE = new TuteeBuilder().withName("Hoon Meier").withPhone("8482424")
             .withEmail("stefan@example.com").withAddress("little india").withSubject("economics").withGrade("A1")
             .withEducationLevel("secondary").withSchool("changi secondary school").build();
+
     public static final Tutee IDATUTEE = new TuteeBuilder().withName("Ida Mueller").withPhone("8482131")
             .withEmail("hans@example.com").withAddress("chicago ave").withSubject("english").withGrade("B3")
             .withEducationLevel("secondary").withSchool("tanjong katong secondary school").build();
@@ -1214,12 +1497,11 @@ public class TypicalTutees {
             .withEmail(VALID_EMAIL_AMY).withAddress(VALID_ADDRESS_AMY).withSubject(VALID_SUBJECT_AMY)
             .withGrade(VALID_GRADE_AMY).withEducationLevel(VALID_EDUCATION_LEVEL_AMY).withSchool(VALID_SCHOOL_AMY)
             .withTags(VALID_TAG_FRIEND).build();
+
     public static final Tutee BOBTUTEE = new TuteeBuilder().withName(VALID_NAME_BOB).withPhone(VALID_PHONE_BOB)
             .withEmail(VALID_EMAIL_BOB).withAddress(VALID_ADDRESS_BOB).withSubject(VALID_SUBJECT_BOB)
             .withGrade(VALID_GRADE_BOB).withEducationLevel(VALID_EDUCATION_LEVEL_BOB).withSchool(VALID_SCHOOL_BOB)
             .withTags(VALID_TAG_HUSBAND, VALID_TAG_FRIEND).build();
-
-    public static final String KEYWORD_MATCHING_MEIER = "Meier"; // A keyword that matches MEIER
 
     private TypicalTutees() {} // prevents instantiation
 
@@ -1238,16 +1520,16 @@ public class TypicalCalendarEntries {
     public static final String VALID_NAME = "Jason";
     public static final String VALID_DURATION = "1h30m";
     public static final String VALID_DESCRIPTION = "homework 1";
-
     private static final String VALID_STRING_START_DATE_TIME = "01/04/2018 11:00";
     private static final String VALID_STRING_END_DATE_TIME = "01/04/2018 12:30";
+
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm")
             .withResolverStyle(ResolverStyle.STRICT);
-
     public static final LocalDateTime VALID_START_DATE_TIME =
             LocalDateTime.parse(VALID_STRING_START_DATE_TIME, formatter);
     public static final LocalDateTime VALID_END_DATE_TIME =
             LocalDateTime.parse(VALID_STRING_END_DATE_TIME, formatter);
+
     private static Entry validTuitionEntry;
     private static Entry validPersonalEntry;
 
@@ -1352,7 +1634,7 @@ public class AddTuteeCommandSystemTest extends AddressBookSystemTest {
 
         /* ------------------------ Perform add operations on the shown unfiltered list ----------------------------- */
 
-        /* Case: add a person without tags to a non-empty address book, command with leading spaces and trailing spaces
+        /* Case: add a tutee without tags to a non-empty address book, command with leading spaces and trailing spaces
          * -> added
          */
         Tutee toAdd = AMYTUTEE;
@@ -1399,7 +1681,7 @@ public class AddTuteeCommandSystemTest extends AddressBookSystemTest {
                 + SUBJECT_DESC_AMY + GRADE_DESC_AMY + EDUCATION_LEVEL_DESC_AMY + SCHOOL_DESC_AMY + TAG_DESC_FRIEND;
         assertCommandSuccess(command, toAdd);
 
-        /* Case: add a person with all fields same as another person in the address book except address -> added */
+        /* Case: add a tutee with all fields same as another tutee in the address book except address -> added */
         toAdd = new TuteeBuilder().withName(VALID_NAME_AMY).withPhone(VALID_PHONE_AMY).withEmail(VALID_EMAIL_AMY)
                 .withAddress(VALID_ADDRESS_BOB).withSubject(VALID_SUBJECT_AMY).withGrade(VALID_GRADE_AMY)
                 .withEducationLevel(VALID_EDUCATION_LEVEL_AMY).withSchool(VALID_SCHOOL_AMY).withTags(VALID_TAG_FRIEND)
@@ -1412,27 +1694,21 @@ public class AddTuteeCommandSystemTest extends AddressBookSystemTest {
         deleteAllPersons();
         assertCommandSuccess(ALICETUTEE);
 
-        /* Case: add a person with tags, command with parameters in random order -> added */
+        /* Case: add a tutee with tags, command with parameters in random order -> added */
         toAdd = BOBTUTEE;
         command = AddTuteeCommand.COMMAND_WORD + TAG_DESC_FRIEND + PHONE_DESC_BOB + ADDRESS_DESC_BOB + NAME_DESC_BOB
                 + TAG_DESC_HUSBAND + EMAIL_DESC_BOB + GRADE_DESC_BOB + SUBJECT_DESC_BOB + EDUCATION_LEVEL_DESC_BOB
                 + SCHOOL_DESC_BOB;
         assertCommandSuccess(command, toAdd);
 
-        /* Case: add a person, missing tags -> added */
+        /* Case: add a tutee, missing tags -> added */
         assertCommandSuccess(HOONTUTEE);
 
         /* -------------------------- Perform add operation on the shown filtered list ------------------------------ */
 
-        /* Case: filters the person list before adding -> added */
+        /* Case: filters the contact list before adding -> added */
         showPersonsWithName(KEYWORD_MATCHING_MEIER);
         assertCommandSuccess(IDATUTEE);
-
-        /* ------------------------ Perform add operation while a person card is selected --------------------------- */
-
-        /* Case: selects first card in the person list, add a person -> added, card selection remains unchanged */
-        selectPerson(Index.fromOneBased(1));
-        assertCommandSuccess(CARLTUTEE);
 
         /* ----------------------------------- Perform invalid add operations --------------------------------------- */
 
@@ -1572,7 +1848,7 @@ public class AddTuteeCommandSystemTest extends AddressBookSystemTest {
     }
 
     /**
-     * Performs the same verification as {@code assertCommandSuccess(String, Person)} except asserts that
+     * Performs the same verification as {@code assertCommandSuccess(String, Tutee)} except asserts that
      * the,<br>
      * 1. Result display box displays {@code expectedResultMessage}.<br>
      * 2. {@code Model}, {@code Storage} and {@code PersonListPanel} equal to the corresponding components in

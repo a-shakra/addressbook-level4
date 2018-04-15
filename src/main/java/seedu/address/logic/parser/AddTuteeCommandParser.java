@@ -63,6 +63,7 @@ public class AddTuteeCommandParser implements Parser<AddTuteeCommand> {
             Set<Tag> tagList = ParserUtil.parseTuteeTags(argMultimap.getAllValues(PREFIX_TAG));
 
             Tutee person = new Tutee(name, phone, email, address, subject, grade, educationLevel, school, tagList);
+
             return new AddTuteeCommand(person);
         } catch (IllegalValueException ive) {
             throw new ParseException(ive.getMessage(), ive);

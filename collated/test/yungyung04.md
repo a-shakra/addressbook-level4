@@ -81,8 +81,10 @@ public class AddPersonalTaskCommandTest {
     private class ModelStubThrowingTimingClashException extends ModelStub {
         @Override
         public void addTask(Task task) throws TimingClashException {
-            throw new TimingClashException(MESSAGE_TASK_TIMING_CLASHES);
+            throw new TimingClashException();
         }
+
+
 
         @Override
         public ReadOnlyAddressBook getAddressBook() {
@@ -591,7 +593,7 @@ public class SortPersonCommandTest {
         sortSchool.setData(model, new CommandHistory(), new UndoRedoStack());
         String expectedMessage = String.format(SortPersonCommand.MESSAGE_SUCCESS);
         assertCommandSuccess(sortSchool, expectedMessage,
-                Arrays.asList(AMYTUTEE, ALICETUTEE, BOBTUTEE, DANIEL));
+                Arrays.asList(ALICETUTEE, AMYTUTEE, BOBTUTEE, DANIEL));
     }
 
     @Test
@@ -680,6 +682,89 @@ public class FindPersonCommandParserTest {
 
         // multiple whitespaces between keywords
         assertParseSuccess(parser, CATEGORY_NAME + " \n\t  " + "Bob", expectedFindName);
+    }
+}
+```
+###### \java\seedu\address\logic\parser\NaturalLanguageIdentifierTest.java
+``` java
+public class NaturalLanguageIdentifierTest {
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    private NaturalLanguageIdentifier identifier = NaturalLanguageIdentifier.getInstance();
+
+    @Test
+    public void getInstance_firstTimeCalled_returnInstanceOfClass() {
+        assertTrue(identifier instanceof NaturalLanguageIdentifier);
+    }
+
+    @Test
+    public void getInstance_subsequentCalls_returnSameInstance() {
+        NaturalLanguageIdentifier identifierCopy = NaturalLanguageIdentifier.getInstance();
+        assertEquals(identifier, identifierCopy);
+    }
+
+    @Test
+    public void getMonthAsString_recognizableInput_returnMonth() {
+        LocalDateTime current = LocalDateTime.now();
+
+        //natural languages which refer to current month
+        assertEquals(current.getMonth().name(), identifier.getMonthAsString(NATURAL_CURRENT_MONTH));
+        assertEquals(current.getMonth().name(), identifier.getMonthAsString(NATURAL_NOW));
+
+        //natural language which refers to last month
+        assertEquals(current.getMonth().minus(1).name(), identifier.getMonthAsString(NATURAL_LAST_MONTH));
+
+        //natural language which refers to next month
+        assertEquals(current.getMonth().plus(1).name(), identifier.getMonthAsString(NATURAL_NEXT_MONTH));
+    }
+
+    @Test
+    public void getMonthAsString_unrecognizableInput_returnInput() {
+        LocalDateTime current = LocalDateTime.now();
+        String unrecognizable = "unrecognizable input";
+        assertEquals(unrecognizable, identifier.getMonthAsString(unrecognizable));
+    }
+
+    @Test
+    public void getMonthAsString_nullInput_returnInput() {
+        LocalDateTime current = LocalDateTime.now();
+        String unrecognizable = null;
+        thrown.expect(NullPointerException.class);
+        String result = identifier.getMonthAsString(unrecognizable);
+    }
+
+    @Test
+    public void mergeTwoWordedNaturalLanguage_emptyString_returnEmptyString() {
+        String[] userInputs = {};
+        String[] expectedResults = {};
+        String[] results = identifier.mergeTwoWordedNaturalLanguage(userInputs);
+        assertArrayEquals(expectedResults, results);
+    }
+
+    @Test
+    public void mergeTwoWordedNaturalLanguage_oneRecognizableElement_returnInputtedArray() {
+        String[] userInputs = {"this"};
+        String[] expectedResults = {"this"};
+        String[] results = identifier.mergeTwoWordedNaturalLanguage(userInputs);
+        assertArrayEquals(expectedResults, userInputs);
+    }
+
+    @Test
+    public void mergeTwoWordedNaturalLanguage_oneUnrecognizableElement_returnInputtedArray() {
+        String[] userInputs = {"unrecognizable"};
+        String[] expectedResults = {"unrecognizable"};
+        String[] results = identifier.mergeTwoWordedNaturalLanguage(userInputs);
+        assertArrayEquals(expectedResults, results);
+    }
+
+    @Test
+    public void mergeTwoWordedNaturalLanguage_multipleElements_returnMergedArray() {
+        String[] userInputs = {"this", "month", "today", "unrecognized", "last", "month", "unrecognized"};
+        String[] expectedResults = {"this month", "today", "unrecognized", "last month", "unrecognized"};
+        String[] results = identifier.mergeTwoWordedNaturalLanguage(userInputs);
+        assertArrayEquals(expectedResults, results);
     }
 }
 ```
@@ -817,6 +902,523 @@ public class SortPersonCommandParserTest {
 
         // multiple whitespaces before and after sort category
         assertParseSuccess(parser, "   \n\t" + CATEGORY_NAME + "\n\t", expectedSortName);
+    }
+}
+```
+###### \java\seedu\address\model\person\PersonSortUtilTest.java
+``` java
+public class PersonSortUtilTest {
+    private static final String LOWER_ORDER = "a";
+    private static final String MIDDLE_ORDER = "b";
+    private static final String HIGHER_ORDER = "c";
+    private static final String EDUCATION_LEVEL_PRIMARY = "primary";
+    private static final String EDUCATION_LEVEL_SECONDARY = "secondary";
+    private static final String EDUCATION_LEVEL_JUNIOR_COLLEGE = "junior college";
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    private Person lowerOrder = new TuteeBuilder().withName(MIDDLE_ORDER).withEducationLevel(EDUCATION_LEVEL_PRIMARY)
+            .withGrade(MIDDLE_ORDER).withSchool(MIDDLE_ORDER).withSubject(MIDDLE_ORDER).build();
+    private Person higherOrder = new TuteeBuilder().withName(HIGHER_ORDER).withEducationLevel(EDUCATION_LEVEL_SECONDARY)
+            .withGrade(HIGHER_ORDER).withSchool(HIGHER_ORDER).withSubject(HIGHER_ORDER).build();
+    private Person versatileOrder;
+
+    @Test
+    public void getComparator_validNameCategory_compareSuccessfully() {
+        //all first person's categories have lower lexicographical order
+        Comparator<Person> comparator = getComparator(CATEGORY_NAME);
+        int expected = lowerOrder.getName().fullName.compareTo(higherOrder.getName().fullName);
+        assertCompareSuccessfully(comparator, expected, lowerOrder, higherOrder);
+
+        //first person's name has lower lexicographical order and the other categories have equal order
+        versatileOrder = new TuteeBuilder((Tutee) lowerOrder).withName(HIGHER_ORDER).build();
+        expected = lowerOrder.getName().fullName.compareTo(versatileOrder.getName().fullName);
+        assertCompareSuccessfully(comparator, expected, lowerOrder, versatileOrder);
+
+        //first person's name has lower lexicographical order but the other categories have higher order
+        versatileOrder = new TuteeBuilder((Tutee) higherOrder).withEducationLevel(EDUCATION_LEVEL_JUNIOR_COLLEGE)
+                .withGrade(LOWER_ORDER).withSchool(LOWER_ORDER).withSubject(LOWER_ORDER).build();
+        expected = lowerOrder.getName().fullName.compareTo(versatileOrder.getName().fullName);
+        assertCompareSuccessfully(comparator, expected, lowerOrder, versatileOrder);
+
+        //first person's name has equal lexicographical order
+        expected = lowerOrder.getName().fullName.compareTo(lowerOrder.getName().fullName);
+        assertCompareSuccessfully(comparator, expected, lowerOrder, lowerOrder);
+
+        //first person's name has higher lexicographical order
+        expected = higherOrder.getName().fullName.compareTo(lowerOrder.getName().fullName);
+        assertCompareSuccessfully(comparator, expected, higherOrder, lowerOrder);
+    }
+
+    @Test
+    public void getComparator_validEducationLevelCategory_compareSuccessfully() {
+        //all first person's categories have lower lexicographical order
+        Comparator<Person> comparator = getComparator(CATEGORY_EDUCATION_LEVEL);
+        int expected = ((Tutee) lowerOrder).getEducationLevel().toString()
+                .compareTo(((Tutee) higherOrder).getEducationLevel().toString());
+        assertCompareSuccessfully(comparator, expected, lowerOrder, higherOrder);
+
+        //first person's education level has lower lexicographical order and the other categories have equal order
+        versatileOrder = new TuteeBuilder((Tutee) lowerOrder).withEducationLevel(EDUCATION_LEVEL_SECONDARY).build();
+        expected = ((Tutee) lowerOrder).getEducationLevel().toString()
+                .compareTo(((Tutee) versatileOrder).getEducationLevel().toString());
+        assertCompareSuccessfully(comparator, expected, lowerOrder, versatileOrder);
+
+        //first person's education level has lower lexicographical order but the other categories have higher order
+        versatileOrder = new TuteeBuilder((Tutee) higherOrder).withName(LOWER_ORDER)
+                .withGrade(LOWER_ORDER).withSchool(LOWER_ORDER).withSubject(LOWER_ORDER).build();
+        expected = ((Tutee) lowerOrder).getEducationLevel().toString()
+                .compareTo(((Tutee) versatileOrder).getEducationLevel().toString());
+        assertCompareSuccessfully(comparator, expected, lowerOrder, versatileOrder);
+
+        //first person's education level has equal lexicographical order
+        expected = ((Tutee) lowerOrder).getEducationLevel().toString()
+                .compareTo(((Tutee) lowerOrder).getEducationLevel().toString());
+        assertCompareSuccessfully(comparator, expected, lowerOrder, lowerOrder);
+
+        //first person's education level has higher lexicographical order
+        expected = ((Tutee) higherOrder).getEducationLevel().toString()
+                .compareTo(((Tutee) lowerOrder).getEducationLevel().toString());
+        assertCompareSuccessfully(comparator, expected, higherOrder, lowerOrder);
+    }
+
+    @Test
+    public void getComparator_validGradeCategory_compareSuccessfully() {
+        //all first person's categories have lower lexicographical order
+        Comparator<Person> comparator = getComparator(CATEGORY_GRADE);
+        int expected = ((Tutee) lowerOrder).getGrade().toString()
+                .compareTo(((Tutee) higherOrder).getGrade().toString());
+        assertCompareSuccessfully(comparator, expected, lowerOrder, higherOrder);
+
+        //first person's grade has lower lexicographical order and the other categories have equal order
+        versatileOrder = new TuteeBuilder((Tutee) lowerOrder).withGrade(HIGHER_ORDER).build();
+        expected = ((Tutee) lowerOrder).getGrade().toString()
+                .compareTo(((Tutee) versatileOrder).getGrade().toString());
+        assertCompareSuccessfully(comparator, expected, lowerOrder, versatileOrder);
+
+        //first person's grade has lower lexicographical order but the other categories have higher order
+        versatileOrder = new TuteeBuilder((Tutee) higherOrder).withEducationLevel(EDUCATION_LEVEL_JUNIOR_COLLEGE)
+                .withName(LOWER_ORDER).withSchool(LOWER_ORDER).withSubject(LOWER_ORDER).build();
+        expected = ((Tutee) lowerOrder).getGrade().toString()
+                .compareTo(((Tutee) versatileOrder).getGrade().toString());
+        assertCompareSuccessfully(comparator, expected, lowerOrder, versatileOrder);
+
+        //first person's grade has equal lexicographical order
+        expected = ((Tutee) lowerOrder).getGrade().toString()
+                .compareTo(((Tutee) lowerOrder).getGrade().toString());
+        assertCompareSuccessfully(comparator, expected, lowerOrder, lowerOrder);
+
+        //first person's grade has higher lexicographical order
+        expected = ((Tutee) higherOrder).getGrade().toString()
+                .compareTo(((Tutee) lowerOrder).getGrade().toString());
+        assertCompareSuccessfully(comparator, expected, higherOrder, lowerOrder);
+    }
+
+    @Test
+    public void getComparator_validSchoolCategory_compareSuccessfully() {
+        //all first person's categories have lower lexicographical order
+        Comparator<Person> comparator = getComparator(CATEGORY_SCHOOL);
+        int expected = ((Tutee) lowerOrder).getSchool().toString()
+                .compareTo(((Tutee) higherOrder).getSchool().toString());
+        assertCompareSuccessfully(comparator, expected, lowerOrder, higherOrder);
+
+        //first person's school has lower lexicographical order and the other categories have equal order
+        versatileOrder = new TuteeBuilder((Tutee) lowerOrder).withSchool(HIGHER_ORDER).build();
+        expected = ((Tutee) lowerOrder).getSchool().toString()
+                .compareTo(((Tutee) versatileOrder).getSchool().toString());
+        assertCompareSuccessfully(comparator, expected, lowerOrder, versatileOrder);
+
+        //first person's school has lower lexicographical order but the other categories have higher order
+        versatileOrder = new TuteeBuilder((Tutee) higherOrder).withEducationLevel(EDUCATION_LEVEL_JUNIOR_COLLEGE)
+                .withName(LOWER_ORDER).withGrade(LOWER_ORDER).withSubject(LOWER_ORDER).build();
+        expected = ((Tutee) lowerOrder).getSchool().toString()
+                .compareTo(((Tutee) versatileOrder).getSchool().toString());
+        assertCompareSuccessfully(comparator, expected, lowerOrder, versatileOrder);
+
+        //first person's school has equal lexicographical order
+        expected = ((Tutee) lowerOrder).getSchool().toString()
+                .compareTo(((Tutee) lowerOrder).getSchool().toString());
+        assertCompareSuccessfully(comparator, expected, lowerOrder, lowerOrder);
+
+        //first person's school has higher lexicographical order
+        expected = ((Tutee) higherOrder).getSchool().toString()
+                .compareTo(((Tutee) lowerOrder).getSchool().toString());
+        assertCompareSuccessfully(comparator, expected, higherOrder, lowerOrder);
+    }
+
+    @Test
+    public void getComparator_validSubjectCategory_compareSuccessfully() {
+        //all first person's categories have lower lexicographical order
+        Comparator<Person> comparator = getComparator(CATEGORY_SUBJECT);
+        int expected = ((Tutee) lowerOrder).getSubject().toString()
+                .compareTo(((Tutee) higherOrder).getSubject().toString());
+        assertCompareSuccessfully(comparator, expected, lowerOrder, higherOrder);
+
+        //first person's subject has lower lexicographical order and the other categories have equal order
+        versatileOrder = new TuteeBuilder((Tutee) lowerOrder).withSubject(HIGHER_ORDER).build();
+        expected = ((Tutee) lowerOrder).getSubject().toString()
+                .compareTo(((Tutee) versatileOrder).getSubject().toString());
+        assertCompareSuccessfully(comparator, expected, lowerOrder, versatileOrder);
+
+        //first person's subject has lower lexicographical order but the other categories have higher order
+        versatileOrder = new TuteeBuilder((Tutee) higherOrder).withEducationLevel(EDUCATION_LEVEL_JUNIOR_COLLEGE)
+                .withName(LOWER_ORDER).withGrade(LOWER_ORDER).withSchool(LOWER_ORDER).build();
+        expected = ((Tutee) lowerOrder).getSubject().toString()
+                .compareTo(((Tutee) versatileOrder).getSubject().toString());
+        assertCompareSuccessfully(comparator, expected, lowerOrder, versatileOrder);
+
+        //first person's subject has equal lexicographical order
+        expected = ((Tutee) lowerOrder).getSubject().toString()
+                .compareTo(((Tutee) lowerOrder).getSubject().toString());
+        assertCompareSuccessfully(comparator, expected, lowerOrder, lowerOrder);
+
+        //first person's subject has higher lexicographical order
+        expected = ((Tutee) higherOrder).getSubject().toString()
+                .compareTo(((Tutee) lowerOrder).getSubject().toString());
+        assertCompareSuccessfully(comparator, expected, higherOrder, lowerOrder);
+    }
+
+    @Test
+    public void getComparator_invalidCategory_assertionErrorHappen() {
+        thrown.expect(AssertionError.class);
+        Comparator<Person> comparator = getComparator("email");
+    }
+
+    @Test
+    public void compareNameLexicographically_validInput_compareSuccessfully() {
+        lowerOrder = new PersonBuilder().withName("Albert").build();
+        higherOrder = new PersonBuilder().withName("Alice").build();
+
+        //first person has lower lexicographical order
+        int expected = PersonSortUtil.compareNameLexicographically(lowerOrder, higherOrder);
+        int actual = lowerOrder.getName().fullName.compareToIgnoreCase(higherOrder.getName().fullName);
+        assertEquals(expected, actual);
+
+        //first person has higher lexicographical order
+        expected = PersonSortUtil.compareNameLexicographically(higherOrder, lowerOrder);
+        actual = higherOrder.getName().fullName.compareToIgnoreCase(lowerOrder.getName().fullName);
+        assertEquals(expected, actual);
+
+        //both have exactly same name
+        Person lowerOrderCopy = new PersonBuilder(lowerOrder).build();
+        expected = PersonSortUtil.compareNameLexicographically(lowerOrder, lowerOrderCopy);
+        actual = lowerOrder.getName().fullName.compareToIgnoreCase(lowerOrderCopy.getName().fullName);
+        assertEquals(expected, actual);
+
+        //both have same name with different cases -> treated as 2 same namess
+        higherOrder = new PersonBuilder(lowerOrder).withName("ALBERT").build();
+        int expectedFromSameName = expected;
+        int expectedFromDiffName = compareNameLexicographically(lowerOrder, higherOrder);
+        assertEquals(expectedFromSameName, expectedFromDiffName);
+    }
+
+    /**
+     * Checks whether comparator is able to perform the desired comparison.
+     */
+    private void assertCompareSuccessfully(Comparator<Person> comparator, int expected, Person first, Person second) {
+        int actual = comparator.compare(first, second);
+        assertEquals(expected, actual);
+    }
+}
+```
+###### \java\seedu\address\model\tutee\EducationLevelContainsKeywordsPredicateTest.java
+``` java
+public class EducationLevelContainsKeywordsPredicateTest {
+
+    @Test
+    public void equals() {
+        List<String> firstPredicateKeywordList = Collections.singletonList("first");
+        List<String> secondPredicateKeywordList = Arrays.asList("first", "second");
+
+        EducationLevelContainsKeywordsPredicate firstPredicate =
+                new EducationLevelContainsKeywordsPredicate(firstPredicateKeywordList);
+        EducationLevelContainsKeywordsPredicate secondPredicate =
+                new EducationLevelContainsKeywordsPredicate(secondPredicateKeywordList);
+
+        // same object -> returns true
+        assertTrue(firstPredicate.equals(firstPredicate));
+
+        // same values -> returns true
+        EducationLevelContainsKeywordsPredicate firstPredicateCopy =
+                new EducationLevelContainsKeywordsPredicate(firstPredicateKeywordList);
+        assertTrue(firstPredicate.equals(firstPredicateCopy));
+
+        // different types -> returns false
+        assertFalse(firstPredicate.equals(1));
+
+        // null -> returns false
+        assertFalse(firstPredicate.equals(null));
+
+        // different education levels -> returns false
+        assertFalse(firstPredicate.equals(secondPredicate));
+    }
+
+    @Test
+    public void test_educationLevelContainsKeywords_returnsTrue() {
+        // One keyword
+        EducationLevelContainsKeywordsPredicate predicate =
+                new EducationLevelContainsKeywordsPredicate(Collections.singletonList(VALID_EDUCATION_LEVEL_AMY));
+        assertTrue(predicate.test(new TuteeBuilder().withEducationLevel(VALID_EDUCATION_LEVEL_AMY).build()));
+
+        // Multiple keywords
+        predicate = new EducationLevelContainsKeywordsPredicate(Arrays
+                .asList("junior", "college"));
+        assertTrue(predicate.test(new TuteeBuilder()
+                .withEducationLevel("junior college").build()));
+
+        // Only one matching keyword
+        predicate = new EducationLevelContainsKeywordsPredicate(Arrays.asList("junior"));
+        assertTrue(predicate.test(new TuteeBuilder()
+                .withEducationLevel("junior college").build()));
+
+        // Mixed-case keywords
+        predicate = new EducationLevelContainsKeywordsPredicate(Arrays.asList("JuNiOr", "colLEGE"));
+        assertTrue(predicate.test(new TuteeBuilder().withEducationLevel("junior college").build()));
+    }
+
+    @Test
+    public void test_educationLevelDoesNotContainKeywords_returnsFalse() {
+        // Zero keywords
+        EducationLevelContainsKeywordsPredicate predicate =
+                new EducationLevelContainsKeywordsPredicate(Collections.emptyList());
+        assertFalse(predicate.test(new TuteeBuilder().withEducationLevel(VALID_EDUCATION_LEVEL_AMY).build()));
+
+        // Non-matching keyword
+        predicate = new EducationLevelContainsKeywordsPredicate(Arrays.asList(VALID_EDUCATION_LEVEL_ROBERT));
+        assertFalse(predicate.test(new TuteeBuilder().withEducationLevel(VALID_EDUCATION_LEVEL_AMY).build()));
+
+        // Keywords match grade, school and subject, but does not match education level
+        predicate = new EducationLevelContainsKeywordsPredicate(Arrays.asList("school", "B", "mathematics"));
+        assertFalse(predicate.test(new TuteeBuilder().withEducationLevel(VALID_EDUCATION_LEVEL_AMY).withSchool("school")
+                .withGrade("B").withSubject("mathematics").build()));
+
+        // Keywords match email and address, but does not match education level
+        predicate = new EducationLevelContainsKeywordsPredicate(Arrays
+                .asList("Bob", "alice@email.com", "Main", "Street"));
+        assertFalse(predicate.test(new TuteeBuilder().withEducationLevel(VALID_EDUCATION_LEVEL_AMY)
+                .withEmail("alice@email.com").withAddress("Main Street").build()));
+
+    }
+}
+```
+###### \java\seedu\address\model\tutee\GradeContainsKeywordsPredicateTest.java
+``` java
+public class GradeContainsKeywordsPredicateTest {
+
+    @Test
+    public void equals() {
+        List<String> firstPredicateKeywordList = Collections.singletonList("first");
+        List<String> secondPredicateKeywordList = Arrays.asList("first", "second");
+
+        GradeContainsKeywordsPredicate firstPredicate =
+                new GradeContainsKeywordsPredicate(firstPredicateKeywordList);
+        GradeContainsKeywordsPredicate secondPredicate =
+                new GradeContainsKeywordsPredicate(secondPredicateKeywordList);
+
+        // same object -> returns true
+        assertTrue(firstPredicate.equals(firstPredicate));
+
+        // same values -> returns true
+        GradeContainsKeywordsPredicate firstPredicateCopy =
+                new GradeContainsKeywordsPredicate(firstPredicateKeywordList);
+        assertTrue(firstPredicate.equals(firstPredicateCopy));
+
+        // different types -> returns false
+        assertFalse(firstPredicate.equals(1));
+
+        // null -> returns false
+        assertFalse(firstPredicate.equals(null));
+
+        // different education levels -> returns false
+        assertFalse(firstPredicate.equals(secondPredicate));
+    }
+
+    @Test
+    public void test_gradeContainsKeywords_returnsTrue() {
+        // One keyword
+        GradeContainsKeywordsPredicate predicate =
+                new GradeContainsKeywordsPredicate(Collections.singletonList(VALID_GRADE_AMY));
+        assertTrue(predicate.test(new TuteeBuilder().withGrade(VALID_GRADE_AMY).build()));
+
+        // Only one matching keyword
+        predicate = new GradeContainsKeywordsPredicate(Arrays.asList(VALID_GRADE_AMY, VALID_GRADE_BOB));
+        assertTrue(predicate.test(new TuteeBuilder()
+                .withGrade(VALID_GRADE_AMY).build()));
+
+        // Mixed-case keywords
+        predicate = new GradeContainsKeywordsPredicate(Arrays.asList("a"));
+        assertTrue(predicate.test(new TuteeBuilder().withGrade("A").build()));
+    }
+
+    @Test
+    public void test_gradeDoesNotContainKeywords_returnsFalse() {
+        // Zero keywords
+        GradeContainsKeywordsPredicate predicate =
+                new GradeContainsKeywordsPredicate(Collections.emptyList());
+        assertFalse(predicate.test(new TuteeBuilder().withGrade(VALID_GRADE_AMY).build()));
+
+        // Non-matching keyword
+        predicate = new GradeContainsKeywordsPredicate(Arrays.asList(VALID_GRADE_BOB));
+        assertFalse(predicate.test(new TuteeBuilder().withGrade(VALID_GRADE_AMY).build()));
+
+        // Keywords match education level, school and subject, but does not match grade
+        predicate = new GradeContainsKeywordsPredicate(Arrays.asList("school", "primary", "mathematics"));
+        assertFalse(predicate.test(new TuteeBuilder().withGrade(VALID_GRADE_AMY).withSchool("school")
+                .withEducationLevel("primary").withSubject("mathematics").build()));
+
+        // Keywords match email and address, but does not match grade
+        predicate = new GradeContainsKeywordsPredicate(Arrays
+                .asList(VALID_GRADE_BOB, "alice@email.com", "Main", "Street"));
+        assertFalse(predicate.test(new TuteeBuilder().withGrade(VALID_GRADE_AMY)
+                .withEmail("alice@email.com").withAddress("Main Street").build()));
+
+    }
+}
+```
+###### \java\seedu\address\model\tutee\SchoolContainsKeywordsPredicateTest.java
+``` java
+public class SchoolContainsKeywordsPredicateTest {
+
+    @Test
+    public void equals() {
+        List<String> firstPredicateKeywordList = Collections.singletonList("first");
+        List<String> secondPredicateKeywordList = Arrays.asList("first", "second");
+
+        SchoolContainsKeywordsPredicate firstPredicate =
+                new SchoolContainsKeywordsPredicate(firstPredicateKeywordList);
+        SchoolContainsKeywordsPredicate secondPredicate =
+                new SchoolContainsKeywordsPredicate(secondPredicateKeywordList);
+
+        // same object -> returns true
+        assertTrue(firstPredicate.equals(firstPredicate));
+
+        // same values -> returns true
+        SchoolContainsKeywordsPredicate firstPredicateCopy =
+                new SchoolContainsKeywordsPredicate(firstPredicateKeywordList);
+        assertTrue(firstPredicate.equals(firstPredicateCopy));
+
+        // different types -> returns false
+        assertFalse(firstPredicate.equals(1));
+
+        // null -> returns false
+        assertFalse(firstPredicate.equals(null));
+
+        // different schools -> returns false
+        assertFalse(firstPredicate.equals(secondPredicate));
+    }
+
+    @Test
+    public void test_schoolContainsKeywords_returnsTrue() {
+        // One keyword
+        SchoolContainsKeywordsPredicate predicate =
+                new SchoolContainsKeywordsPredicate(Collections.singletonList("nan"));
+        assertTrue(predicate.test(new TuteeBuilder().withSchool("nan hua high school").build()));
+
+        // Only one matching keyword
+        predicate = new SchoolContainsKeywordsPredicate(Arrays.asList("nan", "victoria"));
+        assertTrue(predicate.test(new TuteeBuilder().withSchool("victoria").build()));
+
+        // Mixed-case keywords
+        predicate = new SchoolContainsKeywordsPredicate(Arrays.asList("nan"));
+        assertTrue(predicate.test(new TuteeBuilder().withSchool("NAN").build()));
+    }
+
+    @Test
+    public void test_schoolDoesNotContainKeywords_returnsFalse() {
+        // Zero keywords
+        SchoolContainsKeywordsPredicate predicate =
+                new SchoolContainsKeywordsPredicate(Collections.emptyList());
+        assertFalse(predicate.test(new TuteeBuilder().withSchool(VALID_SCHOOL_AMY).build()));
+
+        // Non-matching keyword
+        predicate = new SchoolContainsKeywordsPredicate(Arrays.asList("victoria"));
+        assertFalse(predicate.test(new TuteeBuilder().withSchool("nan hua high school").build()));
+
+        // Keywords match education level, grade and subject, but does not match school
+        predicate = new SchoolContainsKeywordsPredicate(Arrays.asList("B", "primary", "mathematics"));
+        assertFalse(predicate.test(new TuteeBuilder().withSchool(VALID_SCHOOL_AMY).withGrade("B")
+                .withEducationLevel("primary").withSubject("mathematics").build()));
+
+        // Keywords match email and address, but does not match school
+        predicate = new SchoolContainsKeywordsPredicate(Arrays
+                .asList("victoria", "alice@email.com", "Main", "Street"));
+        assertFalse(predicate.test(new TuteeBuilder().withSchool("nan hua high school")
+                .withEmail("alice@email.com").withAddress("Main Street").build()));
+
+    }
+}
+```
+###### \java\seedu\address\model\tutee\SubjectContainsKeywordsPredicateTest.java
+``` java
+public class SubjectContainsKeywordsPredicateTest {
+
+    @Test
+    public void equals() {
+        List<String> firstPredicateKeywordList = Collections.singletonList("first");
+        List<String> secondPredicateKeywordList = Arrays.asList("first", "second");
+
+        SubjectContainsKeywordsPredicate firstPredicate =
+                new SubjectContainsKeywordsPredicate(firstPredicateKeywordList);
+        SubjectContainsKeywordsPredicate secondPredicate =
+                new SubjectContainsKeywordsPredicate(secondPredicateKeywordList);
+
+        // same object -> returns true
+        assertTrue(firstPredicate.equals(firstPredicate));
+
+        // same values -> returns true
+        SubjectContainsKeywordsPredicate firstPredicateCopy =
+                new SubjectContainsKeywordsPredicate(firstPredicateKeywordList);
+        assertTrue(firstPredicate.equals(firstPredicateCopy));
+
+        // different types -> returns false
+        assertFalse(firstPredicate.equals(1));
+
+        // null -> returns false
+        assertFalse(firstPredicate.equals(null));
+
+        // different subjects -> returns false
+        assertFalse(firstPredicate.equals(secondPredicate));
+    }
+
+    @Test
+    public void test_subjectContainsKeywords_returnsTrue() {
+        // One keyword
+        SubjectContainsKeywordsPredicate predicate =
+                new SubjectContainsKeywordsPredicate(Collections.singletonList(VALID_SUBJECT_AMY));
+        assertTrue(predicate.test(new TuteeBuilder().withSubject(VALID_SUBJECT_AMY).build()));
+
+        // Only one matching keyword
+        predicate = new SubjectContainsKeywordsPredicate(Arrays.asList(VALID_SUBJECT_AMY, VALID_SUBJECT_BOB));
+        assertTrue(predicate.test(new TuteeBuilder().withSubject(VALID_SUBJECT_AMY).build()));
+
+        // Mixed-case keywords
+        predicate = new SubjectContainsKeywordsPredicate(Arrays.asList("MatheMAtics"));
+        assertTrue(predicate.test(new TuteeBuilder().withSubject("mathematics").build()));
+    }
+
+    @Test
+    public void test_subjectDoesNotContainKeywords_returnsFalse() {
+        // Zero keywords
+        SubjectContainsKeywordsPredicate predicate =
+                new SubjectContainsKeywordsPredicate(Collections.emptyList());
+        assertFalse(predicate.test(new TuteeBuilder().withSubject(VALID_SUBJECT_AMY).build()));
+
+        // Non-matching keyword
+        predicate = new SubjectContainsKeywordsPredicate(Arrays.asList(VALID_SUBJECT_BOB));
+        assertFalse(predicate.test(new TuteeBuilder().withSubject(VALID_SUBJECT_AMY).build()));
+
+        // Keywords match education level, grade and school, but does not match subject
+        predicate = new SubjectContainsKeywordsPredicate(Arrays.asList("B", "primary", "school"));
+        assertFalse(predicate.test(new TuteeBuilder().withSubject(VALID_SUBJECT_AMY).withGrade("B")
+                .withEducationLevel("primary").withSchool("school").build()));
+
+        // Keywords match email and address, but does not match subject
+        predicate = new SubjectContainsKeywordsPredicate(Arrays
+                .asList(VALID_SUBJECT_BOB, "alice@email.com", "Main", "Street"));
+        assertFalse(predicate.test(new TuteeBuilder().withSubject(VALID_SUBJECT_AMY)
+                .withEmail("alice@email.com").withAddress("Main Street").build()));
+
     }
 }
 ```
@@ -1002,42 +1604,6 @@ public class SortPersonCommandParserTest {
     }
 }
 ```
-###### \java\seedu\address\testutil\TaskUtil.java
-``` java
-
-import java.time.format.DateTimeFormatter;
-import java.time.format.ResolverStyle;
-
-import seedu.address.logic.commands.AddPersonalTaskCommand;
-import seedu.address.model.Task;
-
-
-/**
- * A utility class for Task.
- */
-public class TaskUtil {
-    public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm")
-            .withResolverStyle(ResolverStyle.STRICT);
-
-    /**
-     * Returns an add personal task command string for adding the {@code task}.
-     */
-    public static String getAddPersonalTaskCommand(Task task) {
-        return AddPersonalTaskCommand.COMMAND_WORD + " " + getPersonalTaskDetails(task);
-    }
-
-    /**
-     * Returns the part of command string for the given {@code task}'s details.
-     */
-    public static String getPersonalTaskDetails(Task task) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(task.getStringTaskDateTime() + " ");
-        sb.append(task.getDuration() + " ");
-        sb.append(task.getDescription() + " ");
-        return sb.toString();
-    }
-}
-```
 ###### \java\systemtests\AddressBookSystemTest.java
 ``` java
     /**
@@ -1097,7 +1663,6 @@ public class TaskUtil {
                 + AMYTUTEE.getSubject().toString();
         assertCommandSuccess(command, expectedModel);
         assertSelectedCardUnchanged();
-
 ```
 ###### \java\systemtests\ModelHelper.java
 ``` java

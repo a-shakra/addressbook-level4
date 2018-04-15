@@ -15,16 +15,16 @@ public class TypicalCalendarEntries {
     public static final String VALID_NAME = "Jason";
     public static final String VALID_DURATION = "1h30m";
     public static final String VALID_DESCRIPTION = "homework 1";
-
     private static final String VALID_STRING_START_DATE_TIME = "01/04/2018 11:00";
     private static final String VALID_STRING_END_DATE_TIME = "01/04/2018 12:30";
+
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm")
             .withResolverStyle(ResolverStyle.STRICT);
-
     public static final LocalDateTime VALID_START_DATE_TIME =
             LocalDateTime.parse(VALID_STRING_START_DATE_TIME, formatter);
     public static final LocalDateTime VALID_END_DATE_TIME =
             LocalDateTime.parse(VALID_STRING_END_DATE_TIME, formatter);
+
     private static Entry validTuitionEntry;
     private static Entry validPersonalEntry;
 

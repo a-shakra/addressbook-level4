@@ -31,7 +31,6 @@ import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.FindPersonCommand;
 import seedu.address.logic.commands.ListCommand;
-import seedu.address.logic.commands.SelectCommand;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.person.exceptions.DuplicatePersonException;
@@ -154,16 +153,6 @@ public abstract class AddressBookSystemTest {
         executeCommand(FindPersonCommand.COMMAND_ALIAS + " " + CATEGORY_NAME + " " + keyword);
         assertTrue(getModel().getFilteredPersonList().size()
                 < getModel().getAddressBook().getPersonList().size());
-    }
-
-    /**
-     * Selects the person at {@code index} of the displayed list.
-     */
-    protected void selectPerson(Index index) {
-        executeCommand(SelectCommand.COMMAND_WORD + " " + index.getOneBased());
-        assertEquals(index.getZeroBased(), getPersonListPanel().getSelectedCardIndex());
-        executeCommand(SelectCommand.COMMAND_ALIAS + " " + index.getOneBased());
-        assertEquals(index.getZeroBased(), getPersonListPanel().getSelectedCardIndex());
     }
 
     /**

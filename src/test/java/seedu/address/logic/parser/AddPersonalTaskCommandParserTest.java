@@ -52,24 +52,17 @@ public class AddPersonalTaskCommandParserTest {
                 String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddPersonalTaskCommand.MESSAGE_USAGE));
 
         // Invalid date
-        assertParseFailure(parser, "29/02/2018 11:11 1h30m Outing with friends",
-                MESSAGE_INVALID_DATE_TIME + "\n" + AddPersonalTaskCommand.MESSAGE_USAGE);
-        assertParseFailure(parser, "31/04/2018 11:11 1h30m Outing with friends",
-                MESSAGE_INVALID_DATE_TIME + "\n" + AddPersonalTaskCommand.MESSAGE_USAGE);
-        assertParseFailure(parser, "32/01/2018 11:11 1h30m Outing with friends",
-                MESSAGE_INVALID_DATE_TIME + "\n" + AddPersonalTaskCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, "29/02/2018 11:11 1h30m Outing with friends", MESSAGE_INVALID_DATE_TIME);
+        assertParseFailure(parser, "31/04/2018 11:11 1h30m Outing with friends", MESSAGE_INVALID_DATE_TIME);
+        assertParseFailure(parser, "32/01/2018 11:11 1h30m Outing with friends", MESSAGE_INVALID_DATE_TIME);
 
         // Invalid time
-        assertParseFailure(parser, "11/01/2018 24:00 1h30m Outing with friends",
-                MESSAGE_INVALID_DATE_TIME + "\n" + AddPersonalTaskCommand.MESSAGE_USAGE);
-        assertParseFailure(parser, "11/01/2018 11:60 1h30m Outing with friends",
-                MESSAGE_INVALID_DATE_TIME + "\n" + AddPersonalTaskCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, "11/01/2018 24:00 1h30m Outing with friends", MESSAGE_INVALID_DATE_TIME);
+        assertParseFailure(parser, "11/01/2018 11:60 1h30m Outing with friends", MESSAGE_INVALID_DATE_TIME);
 
         // Invalid duration
-        assertParseFailure(parser, "11/01/2018 11:11 1h60m Outing with friends",
-                MESSAGE_INVALID_DURATION + "\n" + AddPersonalTaskCommand.MESSAGE_USAGE);
-        assertParseFailure(parser, "11/01/2018 11:11 24h0m Outing with friends",
-                MESSAGE_INVALID_DURATION + "\n" + AddPersonalTaskCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, "11/01/2018 11:11 1h60m Outing with friends", MESSAGE_INVALID_DURATION);
+        assertParseFailure(parser, "11/01/2018 11:11 24h0m Outing with friends", MESSAGE_INVALID_DURATION);
     }
 
     @Test

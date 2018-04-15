@@ -390,7 +390,7 @@ public class SortPersonCommand extends Command {
 
     public SortPersonCommand(String category) {
         this.category = category;
-        comparator = new PersonSortUtil().getComparator(category);
+        comparator = PersonSortUtil.getComparator(category);
     }
 
     @Override
@@ -431,7 +431,7 @@ public class SortTaskCommand extends Command {
     public SortTaskCommand(String category) {
         requireNonNull(category);
         this.category = category;
-        comparator = new TaskSortUtil().getComparator(category);
+        comparator = TaskSortUtil.getComparator(category);
     }
 
     @Override
@@ -484,11 +484,9 @@ public class AddPersonalTaskCommandParser implements Parser<AddPersonalTaskComma
 
             return new AddPersonalTaskCommand(new PersonalTask(taskDateTime, duration, description));
         } catch (DateTimeParseException dtpe) {
-            throw new ParseException(MESSAGE_INVALID_DATE_TIME + "\n"
-                    + AddPersonalTaskCommand.MESSAGE_USAGE);
+            throw new ParseException(MESSAGE_INVALID_DATE_TIME);
         } catch (DurationParseException dpe) {
-            throw new ParseException(MESSAGE_INVALID_DURATION + "\n"
-                    + AddPersonalTaskCommand.MESSAGE_USAGE);
+            throw new ParseException(MESSAGE_INVALID_DURATION);
         }
     }
 }
@@ -620,7 +618,7 @@ public class FindTaskCommandParser implements Parser<FindTaskCommand> {
     private static final int INDEX_OF_KEYWORDS = 2;
     private static final int INDEX_OF_FIRST_KEYWORD = 0;
     private static final int INDEX_OF_SECOND_KEYWORD = 1;
-    private static final int INVALID_MONTH = -1;
+    private static final int INVALID_MONTH = 0;
     private static final int MONTH_WITH_MMM_FORMAT_CHARACTER_LENGTH = 3;
     private static final int REQUIRED_AMOUNT_OF_BOUNDARIES = 2;
     private static final int MONTH_WITH_MM_FORMAT_CHARACTER_LENGTH = 2;
@@ -631,7 +629,7 @@ public class FindTaskCommandParser implements Parser<FindTaskCommand> {
             .appendPattern("MM").toFormatter(Locale.ENGLISH);
     private static final DateTimeFormatter FORMATTER_MONTH_MMM = new DateTimeFormatterBuilder().parseCaseInsensitive()
             .appendPattern("MMM").toFormatter(Locale.ENGLISH);
-    private static final DateTimeFormatter FORMATER_MONTH_MMMM = new DateTimeFormatterBuilder().parseCaseInsensitive()
+    private static final DateTimeFormatter FORMATTER_MONTH_MMMM = new DateTimeFormatterBuilder().parseCaseInsensitive()
             .appendPattern("MMMM").toFormatter(Locale.ENGLISH);
 
     private List<String> validCategories = new ArrayList<>(Arrays.asList(CATEGORY_MONTH));
@@ -764,19 +762,53 @@ public class FindTaskCommandParser implements Parser<FindTaskCommand> {
         TemporalAccessor accessor;
         int month = INVALID_MONTH;
         if (monthString.length() < MONTH_WITH_MM_FORMAT_CHARACTER_LENGTH) {
+            checkMonthWithMFormat(monthString);
             accessor = FORMATTER_MONTH_MM.parse("0" + monthString);
             month = accessor.get(ChronoField.MONTH_OF_YEAR);
         } else if (monthString.length() == MONTH_WITH_MM_FORMAT_CHARACTER_LENGTH) {
+            checkMonthWithMmFormat(monthString);
             accessor = FORMATTER_MONTH_MM.parse(monthString);
             month = accessor.get(ChronoField.MONTH_OF_YEAR);
         } else if (monthString.length() == MONTH_WITH_MMM_FORMAT_CHARACTER_LENGTH) {
             accessor = FORMATTER_MONTH_MMM.parse(monthString);
             month = accessor.get(ChronoField.MONTH_OF_YEAR);
         } else if (monthString.length() > MONTH_WITH_MMM_FORMAT_CHARACTER_LENGTH) {
-            accessor = FORMATER_MONTH_MMMM.parse(monthString);
+            accessor = FORMATTER_MONTH_MMMM.parse(monthString);
             month = accessor.get(ChronoField.MONTH_OF_YEAR);
         }
         return month;
+    }
+
+    /**
+     * Checks whether a given month is a valid month with m format
+     * @param monthString the month provided by user input
+     * @throws DateTimeParseException if the given month is invalid.
+     */
+    private void checkMonthWithMFormat(String monthString) throws DateTimeParseException {
+        try {
+            int tempMonth = Integer.parseInt(monthString);
+            if (tempMonth <= INVALID_MONTH) {
+                throw new DateTimeParseException(MESSAGE_INVALID_DATE_TIME, monthString, 0);
+            }
+        } catch (NumberFormatException nfe) {
+            throw new DateTimeParseException(MESSAGE_INVALID_DATE_TIME, monthString, 0);
+        }
+    }
+
+    /**
+     * Checks whether a given month is a valid month with mm format
+     * @param monthString the month provided by user input
+     * @throws DateTimeParseException if the given month is invalid.
+     */
+    private void checkMonthWithMmFormat(String monthString) throws DateTimeParseException {
+        try {
+            int tempMonth = Integer.parseInt(monthString);
+            if (tempMonth > AMOUNT_OF_MONTHS) {
+                throw new DateTimeParseException(MESSAGE_INVALID_DATE_TIME, monthString, 0);
+            }
+        } catch (NumberFormatException nfe) {
+            throw new DateTimeParseException(MESSAGE_INVALID_DATE_TIME, monthString, 0);
+        }
     }
 }
 ```
@@ -825,6 +857,7 @@ public class NaturalLanguageIdentifier {
      * Converts any keywords that are recognizable as month-related natural languages into their month representation.
      */
     public String[] convertNaturalLanguagesIntoMonths(String[] keywords) {
+        requireNonNull(keywords);
         String[] mergedKeywords = mergeTwoWordedNaturalLanguage(keywords);
         for (int i = 0; i < mergedKeywords.length; i++) {
             mergedKeywords[i] = getMonthAsString(mergedKeywords[i]);
@@ -836,11 +869,15 @@ public class NaturalLanguageIdentifier {
      * Converts natural language into its month representation if possible.
      */
     public String getMonthAsString(String userInput) {
+        requireNonNull(userInput);
         String result;
         switch (userInput) {
         case NATURAL_TODAY:
+            //Fallthrough
         case NATURAL_NOW:
+            //Fallthrough
         case NATURAL_CURRENT_MONTH:
+            //Fallthrough
         case NATURAL_THIS_MONTH:
             result = currentDateTime.getMonth().name();
             break;
@@ -857,17 +894,18 @@ public class NaturalLanguageIdentifier {
     }
 
     /**
-     * Merges 2 adjoin strings if they can form a valid natural language.
+     * Merges 2 adjoin Strings if the merged form is a valid natural language.
      * Keywords are case-sensitive.
      */
     public static String[] mergeTwoWordedNaturalLanguage(String[] keywords) {
+        requireNonNull(keywords);
         if (keywords.length <= 1) {
             return keywords;
         }
 
         ArrayList<String> mergedKeywords = new ArrayList<>();
-        for (int i = 0; i < keywords.length - 1; i++) {
-            if (isMergeable(keywords[i], keywords[i + 1])) {
+        for (int i = 0; i < keywords.length; i++) {
+            if (i < (keywords.length - 1) && isMergeable(keywords[i], keywords[i + 1])) {
                 mergedKeywords.add(keywords[i] + " " + keywords[i + 1]);
                 i++;
             } else {
@@ -907,11 +945,19 @@ public class NaturalLanguageIdentifier {
      */
     public static String parseDuration(String duration) throws DurationParseException {
         requireNonNull(duration);
-        String durationValidationRegex = "([0-9]|1[0-9]|2[0-3])h([0-5][0-9]|[0-9])m";
-        if (!duration.matches(durationValidationRegex)) {
+        if (!isValidDuration(duration)) {
             throw new DurationParseException(MESSAGE_INVALID_DURATION);
         }
         return duration;
+    }
+
+    /**
+     * Returns true if the given duration is valid.
+     */
+    private static boolean isValidDuration(String duration) {
+        String durationValidationRegex = "([0-9]|1[0-9]|2[0-3])h([0-5][0-9]|[0-9])m";
+        return duration.matches(durationValidationRegex) && !duration.equals(ZERO_DURATION_FIRST_FORMAT)
+                && !duration.equals(ZERO_DURATION_SECOND_FORMAT);
     }
 
     /**
@@ -974,6 +1020,48 @@ public class SortTaskCommandParser implements Parser<SortTaskCommand> {
     }
 }
 ```
+###### \java\seedu\address\model\AddressBook.java
+``` java
+    /**
+     * Removes {@code Tag} from a particular {@code Person}.
+     * @throws PersonNotFoundException if {@code Person} does not exist.
+     */
+    public void removeTagFromPerson(Tag tag, Person person) {
+        Set<Tag> newTags = new HashSet<>(person.getTags());
+
+        if (!newTags.remove(tag)) {
+            return;
+        }
+
+        if (tag.tagName.equals("Tutee")) {
+            return;
+        }
+
+        Person newPerson =
+                new Person(person.getName(), person.getPhone(), person.getEmail(), person.getAddress(), newTags);
+
+        try {
+            updatePerson(person, newPerson);
+        } catch (DuplicatePersonException dpe) {
+            throw new AssertionError("tag modification should not cause duplicate person");
+        } catch (PersonNotFoundException pnfe) {
+            throw new AssertionError("target person does not exist.");
+        }
+    }
+    //author
+    /**
+     * Removes {@code key} from this {@code AddressBook}.
+     * @throws PersonNotFoundException if the {@code key} is not in this {@code AddressBook}.
+     */
+    public boolean removePerson(Person key) throws PersonNotFoundException {
+        if (persons.remove(key)) {
+            return true;
+        } else {
+            throw new PersonNotFoundException();
+        }
+    }
+
+```
 ###### \java\seedu\address\model\ModelManager.java
 ``` java
     @Override
@@ -986,6 +1074,223 @@ public class SortTaskCommandParser implements Parser<SortTaskCommand> {
         sortedTasks.setComparator(comparator);
     }
 
+```
+###### \java\seedu\address\model\person\PersonSortUtil.java
+``` java
+/**
+ * Provides utilities for sorting a list of Persons.
+ */
+public class PersonSortUtil {
+    public static final String CATEGORY_NAME = "name";
+    public static final String CATEGORY_EDUCATION_LEVEL = "edu";
+    public static final String CATEGORY_GRADE = "grade";
+    public static final String CATEGORY_SCHOOL = "school";
+    public static final String CATEGORY_SUBJECT = "subject";
+    public static final int NEGATIVE_DIGIT = -1;
+    public static final int POSITIVE_DIGIT = 1;
+
+    private static final Logger logger = LogsCenter.getLogger(PersonSortUtil.class);
+
+    /**
+     * Returns the appropriate Person comparator given the sorting category.
+     */
+    public static Comparator<Person> getComparator(String sortCategory) {
+        requireNonNull(sortCategory);
+        Comparator<Person> comparator = null;
+
+        switch (sortCategory) {
+        case CATEGORY_NAME:
+            comparator = getNameComparator();
+            break;
+        case CATEGORY_EDUCATION_LEVEL:
+            comparator = getEducationLevelComparator();
+            break;
+        case CATEGORY_GRADE:
+            comparator = getGradeComparator();
+            break;
+        case CATEGORY_SCHOOL:
+            comparator = getSchoolComparator();
+            break;
+        case CATEGORY_SUBJECT:
+            comparator = getSubjectComparator();
+            break;
+        default:
+            logger.severe("an invalid category is identified in PersonSortUtil class.");
+            assert (false); //invalid sortCategory should be identified in parser.
+        }
+        return comparator;
+    }
+
+    /**
+     * Returns a comparator which is useful to sort education level of a Tutee in an increasing lexicographical order..
+     * Non tutees are listed last according to their names in an increasing lexicographical order.
+     */
+    private static Comparator<Person> getEducationLevelComparator() {
+        return new Comparator<Person>() {
+            @Override
+            public int compare(Person person1, Person person2) {
+                int result = 0; //value will be replaced
+                if (areBothTutees(person1, person2)) {
+
+                    String personEducationLevel1 = ((Tutee) person1).getEducationLevel().toString();
+                    String personEducationLevel2 = ((Tutee) person2).getEducationLevel().toString();
+
+                    result = personEducationLevel1.compareToIgnoreCase(personEducationLevel2);
+                } else if (isFirstTutee(person1, person2)) {
+                    result = NEGATIVE_DIGIT;
+                } else if (isSecondTutee(person1, person2)) {
+                    result = POSITIVE_DIGIT;
+                } else if (areNotTutees(person1, person2)) {
+                    result = compareNameLexicographically(person1, person2);
+                } else {
+                    assert (false); //should never reach this statement -> works as safety measure
+                }
+                return result;
+            }
+        };
+    }
+
+    /**
+     * Returns a comparator which is useful to sort grade Tutees in an increasing lexicographical order..
+     * Non tutees are listed last according to their names in an increasing lexicographical order.
+     */
+    private static Comparator<Person> getGradeComparator() {
+        return new Comparator<Person>() {
+            @Override
+            public int compare(Person person1, Person person2) {
+                int result = 0; //value will be replaced
+                if (areBothTutees(person1, person2)) {
+
+                    String personGrade1 = ((Tutee) person1).getGrade().toString();
+                    String personGrade2 = ((Tutee) person2).getGrade().toString();
+
+                    result = personGrade1.compareToIgnoreCase(personGrade2);
+                } else if (isFirstTutee(person1, person2)) {
+                    result = NEGATIVE_DIGIT;
+                } else if (isSecondTutee(person1, person2)) {
+                    result = POSITIVE_DIGIT;
+                } else if (areNotTutees(person1, person2)) {
+                    result = compareNameLexicographically(person1, person2);
+                } else {
+                    assert (false); //should never reach this statement
+                }
+                return result;
+            }
+        };
+    }
+
+    /**
+     * Returns a comparator which is useful to sort school of Tutees in an increasing lexicographical order.
+     * Non tutees are listed last according to their names in an increasing lexicographical order.
+     */
+    private static Comparator<Person> getSchoolComparator() {
+        return new Comparator<Person>() {
+            @Override
+            public int compare(Person person1, Person person2) {
+                int result = 0; //value will be replaced
+                if (areBothTutees(person1, person2)) {
+
+                    String personSchool1 = ((Tutee) person1).getSchool().toString();
+                    String personSchool2 = ((Tutee) person2).getSchool().toString();
+
+                    result = personSchool1.compareToIgnoreCase(personSchool2);
+                } else if (isFirstTutee(person1, person2)) {
+                    result = NEGATIVE_DIGIT;
+                } else if (isSecondTutee(person1, person2)) {
+                    result = POSITIVE_DIGIT;
+                } else if (areNotTutees(person1, person2)) {
+                    result = compareNameLexicographically(person1, person2);
+                } else {
+                    assert (false); //should never reach this statement
+                }
+                return result;
+            }
+        };
+    }
+
+    /**
+     * Returns a comparator which is useful to sort subject of Tutees in an increasing lexicographical order.
+     * Non tutees are listed last according to their names in an increasing lexicographical order.
+     */
+    private static Comparator<Person> getSubjectComparator() {
+        return new Comparator<Person>() {
+            @Override
+            public int compare(Person person1, Person person2) {
+                int result = 0; //value will be replaced
+                if (areBothTutees(person1, person2)) {
+
+                    String personSubject1 = ((Tutee) person1).getSubject().toString();
+                    String personSubject2 = ((Tutee) person2).getSubject().toString();
+
+                    result = personSubject1.compareToIgnoreCase(personSubject2);
+                } else if (isFirstTutee(person1, person2)) {
+                    result = NEGATIVE_DIGIT;
+                } else if (isSecondTutee(person1, person2)) {
+                    result = POSITIVE_DIGIT;
+                } else if (areNotTutees(person1, person2)) {
+                    result = compareNameLexicographically(person1, person2);
+                } else {
+                    assert (false); //should never reach this statement
+                }
+                return result;
+            }
+        };
+    }
+
+    /**
+     * Returns a comparator which is useful to sort name of Persons in an increasing lexicographical order.
+     */
+    private static Comparator<Person> getNameComparator() {
+        return new Comparator<Person>() {
+            @Override
+            public int compare(Person person1, Person person2) {
+                return compareNameLexicographically(person1, person2);
+            }
+        };
+    }
+
+    /**
+     * Returns true if both the given {@code Person} are subclass of {@code Tutee}
+     */
+    private static boolean areNotTutees(Person person1, Person person2) {
+        return !(person1 instanceof Tutee || person2 instanceof Tutee);
+    }
+
+    /**
+     * Returns true if the given {@code person1} is the only subclass of {@code Tutee}
+     */
+    private static boolean isSecondTutee(Person person1, Person person2) {
+        return !(person1 instanceof Tutee) && person2 instanceof Tutee;
+    }
+
+    /**
+     * Returns true if the given {@code person2} is the only subclass of {@code Tutee}
+     */
+    private static boolean isFirstTutee(Person person1, Person person2) {
+        return person1 instanceof Tutee && !(person2 instanceof Tutee);
+    }
+
+    /**
+     * Returns true if both the given {@code Person} are not subclass of {@code Tutee}
+     */
+    private static boolean areBothTutees(Person person1, Person person2) {
+        return person1 instanceof Tutee && person2 instanceof Tutee;
+    }
+
+    /**
+     * Compares the name of 2 given persons and returns an integer according to their lexicographical relationn
+     * Integer returned follows the behaviour of {@code compareTo} in Java.lang.String
+     *
+     * @param person1 first person to be compared
+     * @param person2 second person to be compared
+     */
+    public static int compareNameLexicographically(Person person1, Person person2) {
+        String personName1 = person1.getName().toString();
+        String personName2 = person2.getName().toString();
+
+        return personName1.compareToIgnoreCase(personName2);
+    }
+}
 ```
 ###### \java\seedu\address\model\personal\PersonalTask.java
 ``` java
@@ -1008,7 +1313,6 @@ public class SortTaskCommandParser implements Parser<SortTaskCommand> {
         return !description.equals(NULL_STRING);
     }
 
-
     @Override
     public boolean equals(Object other) {
         return other == this // short circuit if same object
@@ -1017,6 +1321,7 @@ public class SortTaskCommandParser implements Parser<SortTaskCommand> {
                 && duration.equals(((PersonalTask) other).duration)
                 && description.equals(((PersonalTask) other).description));
     }
+
 }
 ```
 ###### \java\seedu\address\model\task\exceptions\TaskNotFoundException.java
@@ -1062,14 +1367,15 @@ public class MonthContainsKeywordsPredicate implements Predicate<Task> {
 public class TaskSortUtil {
     public static final String CATEGORY_DATE_TIME = "datetime";
     public static final String CATEGORY_MONTH = "month";
-    public static final String CATEGORY_DURATION = "duration";
     public static final int NEGATIVE_DIGIT = -1;
     public static final int POSITIVE_DIGIT = 1;
 
+    private static final Logger logger = LogsCenter.getLogger(TaskSortUtil.class);
+
     /**
-     * Returns the apppropriate Task comparator given the sorting category
-    */
-    public Comparator<Task> getComparator(String sortCategory) {
+     * Returns the appropriate Task comparator given the sorting category
+     */
+    public static Comparator<Task> getComparator(String sortCategory) {
         Comparator<Task> comparator = null;
 
         switch (sortCategory) {
@@ -1080,6 +1386,7 @@ public class TaskSortUtil {
             comparator = getDateTimeComparator();
             break;
         default:
+            logger.severe("an invalid category is identified in TaskSortUtil class.");
             assert (false); //invalid sortCategory should be identified in parser.
         }
         return comparator;
@@ -1088,7 +1395,7 @@ public class TaskSortUtil {
     /**
      * Returns a comparator which is useful for sorting tasks based on the month sequence in an increasing order.
      */
-    private Comparator<Task> getMonthComparator() {
+    private static Comparator<Task> getMonthComparator() {
         return new Comparator<Task>() {
             @Override
             public int compare(Task task1, Task task2) {
@@ -1105,9 +1412,9 @@ public class TaskSortUtil {
     }
 
     /**
-    Returns a comparator which is useful for sorting tasks based on the date and time sequence in an increasing order.
-    */
-    private Comparator<Task> getDateTimeComparator() {
+     * Returns a comparator which is useful for sorting tasks based on the date and time sequence in increasing order.
+     */
+    private static Comparator<Task> getDateTimeComparator() {
         return new Comparator<Task>() {
             @Override
             public int compare(Task task1, Task task2) {
@@ -1119,7 +1426,7 @@ public class TaskSortUtil {
     /**
      * Compares the 2 given months and returns an integer according to their sequence in standard Gregorian calendar.
      */
-    private int compareByMonth(int month1, int month2) {
+    private static int compareByMonth(int month1, int month2) {
         if (month1 < month2) {
             return NEGATIVE_DIGIT;
         } else {
@@ -1130,7 +1437,7 @@ public class TaskSortUtil {
      * Compares the 2 given {@code LocalDateTime} and
      * Returns an integer according to their sequence in standard Gregorian calendar.
      */
-    private int compareByTime(LocalDateTime dateTime1, LocalDateTime dateTime2) {
+    private static int compareByTime(LocalDateTime dateTime1, LocalDateTime dateTime2) {
         assert (!dateTime1.isEqual(dateTime2)); //time should be different due to thrown exception when task is added
         if (dateTime1.isBefore(dateTime2)) {
             return NEGATIVE_DIGIT;
@@ -1169,10 +1476,6 @@ public class TaskSortUtil {
                 && taskDateTime.equals(((TuitionTask) other).taskDateTime)
                 && duration.equals(((TuitionTask) other).duration)
                 && description.equals(((TuitionTask) other).description));
-    }
-
-    public String getTuitionTitle() {
-        return String.format(TUITION_TITLE, tutee);
     }
 }
 ```

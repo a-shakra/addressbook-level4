@@ -137,12 +137,6 @@ public class TuitionTask implements Task {
         return !description.equals(NULL_STRING);
     }
 
-    /**
-     * fixes the test but has conflict with Task card
-     * I, a-shakra, didn't write this, but kept it here because i
-     * don't know the reason for it
-    */
-    //@@author yungyung04
     @Override
     public boolean equals(Object other) {
         return other == this // short circuit if same object

@@ -1,9 +1,10 @@
 # ashakra
 ###### \java\seedu\address\logic\commands\ListTaskCommand.java
 ``` java
+
 public class ListTaskCommand extends Command {
 
-    public static final String COMMAND_WORD = "listTask";
+    public static final String COMMAND_WORD = "listtask";
     public static final String COMMAND_ALIAS = "lt";
 
     public static final String MESSAGE_SUCCESS = "Listed all tasks";
@@ -26,14 +27,20 @@ public class ListTaskCommand extends Command {
 ```
 ###### \java\seedu\address\model\AddressBook.java
 ``` java
+    public void setTasks(List<Task> tasks) throws TimingClashException {
+        this.tasks.setTasks(tasks);
+    }
+```
+###### \java\seedu\address\model\AddressBook.java
+``` java
     /**
      * Adds a task to the address book.
      *
      */
-
     public void addTask(Task t) throws TimingClashException {
         tasks.add(t);
     }
+
 ```
 ###### \java\seedu\address\model\AddressBook.java
 ``` java
@@ -53,10 +60,9 @@ public class ListTaskCommand extends Command {
 ###### \java\seedu\address\model\ModelManager.java
 ``` java
     @Override
-
-    public synchronized void addTask(Task task) throws TimingClashException {
-        addressBook.addTask(task);
-        updateFilteredTaskList(PREDICATE_SHOW_ALL_TASKS);
+    public synchronized void addTask(Task aTask) throws TimingClashException {
+        addressBook.addTask(aTask);
+        updateFilteredTaskList(PREDICATE_SHOW_ALL_TASKS); //Change to new predicate?
         indicateAddressBookChanged();
     }
 
@@ -85,14 +91,37 @@ public class ListTaskCommand extends Command {
      */
     ObservableList<Task> getTaskList();
 ```
+###### \java\seedu\address\model\TaskContainsKeywordsPredicate.java
+``` java
+public class TaskContainsKeywordsPredicate implements Predicate<Task> {
+    private final List<String> keywords;
+
+    public TaskContainsKeywordsPredicate(List<String> keywords) {
+        this.keywords = keywords;
+    }
+
+    @Override
+    public boolean test(Task task) {
+        return keywords.stream()
+                .anyMatch(keyword -> StringUtil.containsWordIgnoreCase(task.getDescription(), keyword));
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return other == this // short circuit if same object
+                || (other instanceof TaskContainsKeywordsPredicate // instanceof handles nulls
+                && this.keywords.equals(((TaskContainsKeywordsPredicate) other).keywords)); // state check
+    }
+
+}
+```
 ###### \java\seedu\address\model\UniqueTaskList.java
 ``` java
 public class UniqueTaskList implements Iterable<Task> {
+
     private static final String HOUR_DELIMITER = "h";
     private static final String MINUTE_DELIMITER = "m";
-
     private final ObservableList<Task> internalList = FXCollections.observableArrayList();
-
 
     /**
      * Constructs empty TaskList.
@@ -103,8 +132,21 @@ public class UniqueTaskList implements Iterable<Task> {
 ###### \java\seedu\address\model\UniqueTaskList.java
 ``` java
     /**
+     * Replaces the person {@code target} in the list with {@code editedPerson}.
+     */
+    public void setTask(Task target, Task editedTask) throws TaskNotFoundException {
+        requireNonNull(editedTask);
+
+        int index = internalList.indexOf(target);
+        if (index == -1) {
+            throw new TaskNotFoundException();
+        }
+        internalList.set(index, editedTask);
+    }
+
+
+    /**
      * Removes the equivalent task from the list.
-     *
      */
     public boolean remove(Task toRemove) throws TaskNotFoundException {
         requireNonNull(toRemove);
@@ -118,6 +160,7 @@ public class UniqueTaskList implements Iterable<Task> {
     public void setTasks(UniqueTaskList replacement) {
         this.internalList.setAll(replacement.internalList);
     }
+
 
     public void setTasks(List<Task> tasks) throws TimingClashException {
         requireAllNonNull(tasks);
@@ -161,8 +204,6 @@ public class UniqueTaskList implements Iterable<Task> {
 public class XmlAdaptedTask {
 
     public static final String MISSING_FIELD_MESSAGE_FORMAT = "Task's %s field is missing!";
-    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm")
-            .withResolverStyle(ResolverStyle.STRICT);
 
     @XmlElement(required = true)
     private String name;
@@ -182,17 +223,18 @@ public class XmlAdaptedTask {
     /**
      * Constructs an {@code XmlAdaptedTask} with given personal task details.
      */
-    public XmlAdaptedTask(String description, String duration, LocalDateTime dateAndTime) {
+    public XmlAdaptedTask(String description, String duration, String dateAndTime) {
+        //this.name = "null";
         this.description = description;
         this.duration = duration;
-        this.dateAndTime = dateAndTime.toString();
+        this.dateAndTime = dateAndTime;
     }
 
-    public XmlAdaptedTask(String name, String description, String duration, LocalDateTime dateAndTime) {
+    public XmlAdaptedTask(String name, String description, String duration, String dateAndTime) {
         this.name = name;
         this.description = description;
         this.duration = duration;
-        this.dateAndTime = dateAndTime.format(formatter);
+        this.dateAndTime = dateAndTime;
     }
 
     /**
@@ -202,7 +244,7 @@ public class XmlAdaptedTask {
     public XmlAdaptedTask(Task source) {
         description = source.getDescription();
         duration = source.getDuration();
-        dateAndTime = source.getTaskDateTime().format(formatter);
+        dateAndTime = source.getTaskDateTime().toString();
         if (source instanceof TuitionTask) {
             name = ((TuitionTask) source).getPerson();
         }
@@ -217,7 +259,7 @@ public class XmlAdaptedTask {
      */
 
     public Task toModelType() throws IllegalValueException {
-        LocalDateTime taskDateTime = LocalDateTime.parse(dateAndTime, formatter);
+        LocalDateTime taskDateTime = LocalDateTime.parse(dateAndTime);
         if (this.description == null) {
             throw new IllegalValueException(String.format(MISSING_FIELD_MESSAGE_FORMAT,
                     Task.MESSAGE_DESCRIPTION_CONSTRAINTS));
@@ -235,6 +277,26 @@ public class XmlAdaptedTask {
         } else {
             return new TuitionTask(name, taskDateTime, duration, description);
         }
+    }
+
+    /**
+     * Returns true if the two tasks are equal. Needs to be updated to reflect the name parameter
+     */
+    public boolean equals(Object other) {
+
+        if (other == this) {
+            return true;
+        }
+
+        if (!(other instanceof XmlAdaptedTask)) {
+            return false;
+        }
+
+        XmlAdaptedTask otherTask = (XmlAdaptedTask) other;
+        return Objects.equals(description, otherTask.description)
+                && Objects.equals(duration, otherTask.duration)
+                && Objects.equals(dateAndTime, otherTask.dateAndTime)
+                && Objects.equals(name, otherTask.name);
     }
 }
 ```

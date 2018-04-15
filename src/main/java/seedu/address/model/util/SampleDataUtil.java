@@ -29,14 +29,14 @@ import seedu.address.model.tutee.Tutee;
  * Contains utility methods for populating {@code AddressBook} with sample data.
  */
 public class SampleDataUtil {
-    public static final String DATETIME1 = "03/04/2018 02:15";
-    public static final String DATETIME2 = "03/04/2018 05:25";
-    public static final String DATETIME3 = "07/06/2018 03:45";
+    public static final String DATETIME1 = "16/04/2018 15:15";
+    public static final String DATETIME2 = "19/04/2018 09:25";
+    public static final String DATETIME3 = "07/06/2018 16:45";
     public static final String DATETIME4 = "03/06/2019 12:10";
-    public static final String DATETIME5 = "05/07/2020 02:45";
+    public static final String DATETIME5 = "05/07/2020 18:45";
     public static final String DATETIME6 = "15/07/2018 06:55";
-    public static final String DATETIME7 = "20/10/2018 03:11";
-    public static final String DATETIME8 = "22/12/2018 08:18";
+    public static final String DATETIME7 = "20/10/2018 11:11";
+    public static final String DATETIME8 = "16/12/2018 08:18";
     public static final String DATETIME9 = "23/12/2018 10:28";
     public static final String DATETIME10 = "13/01/2018 11:30";
     public static final String DATETIME11 = "29/01/2018 12:30";

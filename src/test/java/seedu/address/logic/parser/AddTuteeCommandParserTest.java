@@ -67,6 +67,9 @@ import seedu.address.model.tutee.Tutee;
 import seedu.address.testutil.TuteeBuilder;
 
 //@@author ChoChihTun
+/**
+ * Contains tests for {@code AddTuteeCommandParser}.
+ */
 public class AddTuteeCommandParserTest {
     private AddTuteeCommandParser parser = new AddTuteeCommandParser();
 

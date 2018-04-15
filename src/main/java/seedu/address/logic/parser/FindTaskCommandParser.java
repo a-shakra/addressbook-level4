@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.commons.core.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.commons.core.Messages.MESSAGE_INVALID_DATE_TIME;
 import static seedu.address.commons.core.Messages.MESSAGE_INVALID_FILTER_CATEGORY;
 import static seedu.address.commons.core.Messages.MESSAGE_INVALID_INPUT_TYPES;
 import static seedu.address.commons.core.Messages.MESSAGE_INVALID_KEYWORD_GIVEN;
@@ -33,7 +34,7 @@ public class FindTaskCommandParser implements Parser<FindTaskCommand> {
     private static final int INDEX_OF_KEYWORDS = 2;
     private static final int INDEX_OF_FIRST_KEYWORD = 0;
     private static final int INDEX_OF_SECOND_KEYWORD = 1;
-    private static final int INVALID_MONTH = -1;
+    private static final int INVALID_MONTH = 0;
     private static final int MONTH_WITH_MMM_FORMAT_CHARACTER_LENGTH = 3;
     private static final int REQUIRED_AMOUNT_OF_BOUNDARIES = 2;
     private static final int MONTH_WITH_MM_FORMAT_CHARACTER_LENGTH = 2;
@@ -177,9 +178,11 @@ public class FindTaskCommandParser implements Parser<FindTaskCommand> {
         TemporalAccessor accessor;
         int month = INVALID_MONTH;
         if (monthString.length() < MONTH_WITH_MM_FORMAT_CHARACTER_LENGTH) {
+            checkMonthWithMFormat(monthString);
             accessor = FORMATTER_MONTH_MM.parse("0" + monthString);
             month = accessor.get(ChronoField.MONTH_OF_YEAR);
         } else if (monthString.length() == MONTH_WITH_MM_FORMAT_CHARACTER_LENGTH) {
+            checkMonthWithMmFormat(monthString);
             accessor = FORMATTER_MONTH_MM.parse(monthString);
             month = accessor.get(ChronoField.MONTH_OF_YEAR);
         } else if (monthString.length() == MONTH_WITH_MMM_FORMAT_CHARACTER_LENGTH) {
@@ -190,5 +193,37 @@ public class FindTaskCommandParser implements Parser<FindTaskCommand> {
             month = accessor.get(ChronoField.MONTH_OF_YEAR);
         }
         return month;
+    }
+
+    /**
+     * Checks whether a given month is a valid month with m format
+     * @param monthString the month provided by user input
+     * @throws DateTimeParseException if the given month is invalid.
+     */
+    private void checkMonthWithMFormat(String monthString) throws DateTimeParseException {
+        try {
+            int tempMonth = Integer.parseInt(monthString);
+            if (tempMonth <= INVALID_MONTH) {
+                throw new DateTimeParseException(MESSAGE_INVALID_DATE_TIME, monthString, 0);
+            }
+        } catch (NumberFormatException nfe) {
+            throw new DateTimeParseException(MESSAGE_INVALID_DATE_TIME, monthString, 0);
+        }
+    }
+
+    /**
+     * Checks whether a given month is a valid month with mm format
+     * @param monthString the month provided by user input
+     * @throws DateTimeParseException if the given month is invalid.
+     */
+    private void checkMonthWithMmFormat(String monthString) throws DateTimeParseException {
+        try {
+            int tempMonth = Integer.parseInt(monthString);
+            if (tempMonth > AMOUNT_OF_MONTHS) {
+                throw new DateTimeParseException(MESSAGE_INVALID_DATE_TIME, monthString, 0);
+            }
+        } catch (NumberFormatException nfe) {
+            throw new DateTimeParseException(MESSAGE_INVALID_DATE_TIME, monthString, 0);
+        }
     }
 }

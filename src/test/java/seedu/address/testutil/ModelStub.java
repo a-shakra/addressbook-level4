@@ -13,7 +13,6 @@ import seedu.address.model.Task;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.exceptions.DuplicatePersonException;
 import seedu.address.model.person.exceptions.PersonNotFoundException;
-import seedu.address.model.tag.Tag;
 import seedu.address.model.task.exceptions.TimingClashException;
 
 /**
@@ -82,11 +81,6 @@ public class ModelStub implements Model {
     @Override
     public void updateFilteredPersonList(Predicate<Person> predicate) {
         fail("This method should not be called.");
-    }
-
-    @Override
-    public void deleteTag(Tag tag, Person person) {
-        fail("deleteTag should not be called when adding Person.");
     }
 
     @Override

@@ -13,10 +13,12 @@ import seedu.address.model.tag.UniqueTagList;
 
 //@@author ChoChihTun
 /**
- * Represents a Tutee in the address book.
+ * Represents a tutee in the address book.
  * Guarantees: details are present and not null, field values are validated, immutable.
  */
 public class Tutee extends Person {
+    private static final String TUTEE_TAG_NAME = "Tutee";
+
     private Subject subject;
     private Grade grade;
     private EducationLevel educationLevel;
@@ -33,12 +35,13 @@ public class Tutee extends Person {
         this.educationLevel = educationLevel;
         this.school = school;
 
-        Tag tuteeTag = new Tag("Tutee");
+        // Creates a "Tutee" tag to represent a tutee
+        Tag tuteeTag = new Tag(TUTEE_TAG_NAME);
         if (!this.tags.contains(tuteeTag)) {
             try {
                 this.tags.add(tuteeTag);
             } catch (UniqueTagList.DuplicateTagException e) {
-                // Should not have duplicate tag
+                // Should not have duplicate tutee tag
                 assert (false);
             }
         }

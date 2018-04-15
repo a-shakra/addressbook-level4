@@ -7,7 +7,6 @@ import javafx.collections.ObservableList;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.exceptions.DuplicatePersonException;
 import seedu.address.model.person.exceptions.PersonNotFoundException;
-import seedu.address.model.tag.Tag;
 import seedu.address.model.task.exceptions.TaskNotFoundException;
 import seedu.address.model.task.exceptions.TimingClashException;
 import seedu.address.model.tutee.Tutee;
@@ -62,11 +61,6 @@ public interface Model {
     ObservableList<Task> getFilteredTaskList();
 
     void updateFilteredTaskList(Predicate<Task> predicate);
-
-    /**
-     * Removes the given {@code tag} from the specified {@code person}.
-     */
-    void deleteTag(Tag tag, Person person);
 
     /**
      * Sorts the list of person according to the given comparator

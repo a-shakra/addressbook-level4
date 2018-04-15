@@ -25,6 +25,9 @@ import seedu.address.testutil.ModelStub;
 import seedu.address.testutil.TuteeBuilder;
 
 //@@author ChoChihTun
+/**
+ * Contains integration tests (interaction with the Model) for {@code AddTuteeCommand}.
+ */
 public class AddTuteeCommandTest {
 
     @Rule

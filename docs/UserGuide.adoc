@@ -63,6 +63,7 @@ e.g. typing *`help`* and pressing kbd:[Enter] will open the help window.
 
 // tag::conceptintro[]
 == Concepts Introduction
+* Contact : This refers to both the tutee and person.
 * Tutee  : This refers to the students you are teaching. Adding a student as tutee requires specific *tutee details* to be provided.
          By doing so, it will be easier to organize your contacts using our special features. +
 * Person : Other contacts which are not tutee. +
@@ -134,7 +135,7 @@ Examples:
 * `addtutee n/Dickson ee p/91234567 e/dickson@exmaple.com a/Dickson street, block 456, #02-02 s/english g/f9 edu/primary sch/Newgate Primary School`
 // end::addtutee[]
 
-=== Listing all persons : `list`
+=== Listing all contacts : `list`
 
 Shows a list of all contacts in the address book. +
 Using Command Word: +
@@ -151,7 +152,7 @@ Format: `listtutee` +
 // end::listtutee[]
 
 // tag::edit[]
-=== Editing a person : `edit`
+=== Editing a contact : `edit`
 
 Edits existing contact's details in the address book. +
 Using Command Word: +
@@ -207,9 +208,9 @@ Edits the name of the 2nd contact (a tutee) to be `Betsy Crower`, her school to 
 // end::edit[]
 
 // tag::findperson[]
-=== Locating persons by category: `findpersonby`
+=== Locating contacts by category: `findpersonby`
 
-Finds persons or tutees whose specified category contain any of the given keywords. +
+Finds contacts whose specified category contain any of the given keywords. +
 Using Command Word: +
 Format: `findpersonby CATEGORY KEYWORD [MORE_KEYWORDS]` +
 Using Command Alias: +
@@ -226,7 +227,7 @@ Format: `f CATEGORY KEYWORD [MORE_KEYWORDS]` +
 ** 5. subject*
 * Categories marked with * are only owned by tutees (tutee details).
 * Only full words will be matched e.g. `Han` will not match `Hans`
-* Persons matching at least one keyword will be returned (i.e. `OR` search).
+* Contacts matching at least one keyword will be returned (i.e. `OR` search).
  e.g. `Hans Bo` will return `Hans Gruber`, `Bo Yang`
 ****
 
@@ -235,7 +236,7 @@ Examples:
 * `findpersonby Name John` +
 Lists `john` and `John Doe`
 * `findpersonby name Betsy Tim John` +
-Lists any person having names `Betsy`, `Tim`, or `John`
+Lists any contact having names `Betsy`, `Tim`, or `John`
 * `f grade B B+` +
 Lists all tutee with grade `B` and `B+`
 // end::findperson[]
@@ -271,16 +272,16 @@ Example: +
 sorts by name lexicographically.
 // end::sortperson[]
 
-=== Deleting a person : `delete`
+=== Deleting a contact : `delete`
 
-Deletes the specified person from the address book. +
+Deletes the specified contact from the address book. +
 Using Command Word: +
 Format: `delete INDEX` +
 Using Command Alias: +
 Format: `d INDEX`
 
 ****
-* Deletes the person at the specified `INDEX`.
+* Deletes the contact at the specified `INDEX`.
 * The index refers to the index number shown in the most recent listing.
 * The index *must be a positive integer* 1, 2, 3, ...
 ****
@@ -289,33 +290,10 @@ Examples:
 
 * `list` +
 `delete 2` +
-Deletes the 2nd person in the address book.
+Deletes the 2nd contact in the address book.
 * `f Betsy` +
 `d 1` +
-Deletes the 1st person in the results of the `f` command.
-
-=== Selecting a person : `select`
-
-Selects the person identified by the index number used in the last person listing. +
-Using Command Word: +
-Format: `select INDEX` +
-Using Command Alias: +
-Format: `s INDEX`
-
-****
-* Selects the person and loads the Google search page the person at the specified `INDEX`. [Google search page pop up coming in V2.0]
-* The index refers to the index number shown in the most recent listing.
-* The index *must be a positive integer* `1, 2, 3, ...`
-****
-
-Examples:
-
-* `list` +
-`select 2` +
-Selects the 2nd person in the address book.
-* `f Betsy` +
-`s 1` +
-Selects the 1st person in the results of the `f` command.
+Deletes the 1st contact in the results of the `f` command.
 
 // tag::addtuition[]
 === Adding a tuition task: `addtuition`
@@ -354,7 +332,7 @@ for more information about Tutee.
 *** invalid example : 1h60m
 **** the duration in minute must be a number between 0 and 59.
 *** invalid example : 30m
-**** a correct duration for 30m tuition is *0h30m*.
+**** a correct duration for a 30 minute tuition is *0h30m*.
 
 * DESCRIPTION
 ** Description can be of any format.
@@ -364,7 +342,7 @@ for more information about Tutee.
 
 Examples:
 
-* `addtuition 1 10/05/2018 12:00 1h30m Calculus homework page 24`
+* `addtuition 1 10/05/2018 09:00 1h30m Calculus homework page 24`
 * `addtuition 1 31/12/2018 16:00 0h30m`
 // end::addtuition[]
 
@@ -381,7 +359,7 @@ The parameters (DATE, TIME, DURATION AND DESCRIPTION) have the same structure an
 
 Examples:
 
-* `addtask 10/05/2018 12:00 1h30m Outing with friend`
+* `addtask 10/05/2018 09:00 1h30m Outing with friend`
 * `addtask 31/12/2018 16:00 0h30m`
 // end::addtask[]
 
@@ -568,11 +546,6 @@ Examples:
 `list` +
 `undo` (reverses the `delete 1` command) +
 
-* `select 1` +
-`list` +
-`undo` +
-The `undo` command fails as there are no undoable commands executed previously.
-
 * `delete 1` +
 `clear` +
 `u` (reverses the `clear` command) +
@@ -624,7 +597,7 @@ TuitionConnect data are saved in the hard disk automatically after any command t
 There is no need to save manually.
 // tag::proposedfeatures[]
 === View tutee fees `[coming in v2.0]`
-View the amount that has to be paid by a tutee.
+Views the amount that has to be paid by a tutee.
 
 === View tuition progress `[coming in v2.0]`
 Shows the details of tuition provided within several months in the form of a graph.
@@ -641,7 +614,10 @@ Marks a task as completed. If the task is tuition, fees will automatically be ad
 Edits date, time, duration or description of an existing task and reflects the changes on the calendar.
 
 === View contact address on Google map `[coming in v2.0]`
-View the location of a specific contact's address on google map and the shortest route from the current location will be displayed.
+Views the location of a specific contact's address on google map and the shortest route from the current location will be displayed.
+
+=== Select a contact or a task `[coming in v2.0]`
+Selects either a contact or a task and a pop up page containing all the relevant information will appear.
 // end::ChoChihTunV2.0[]
 
 == FAQ
@@ -668,8 +644,6 @@ e.g. `sort grade`
 * *List* : `list` +
 * *List Tutee* : 'listtutee' +
 * *Help* : `help` +
-* *Select* : `select INDEX` +
-e.g.`select 2` +
 * *Add Tuition* : addtuition TUTEE_INDEX DATE TIME DURATION [DESCRIPTION] +
 e.g. `addtuition 1 10/05/2018 12:00 1h30m Calculus homework page 24` +
 * *Add Task* : 'add DATE TIME DURATION [DESCRIPTION] +
@@ -704,8 +678,6 @@ e.g. `spb grade` +
 * *Sort Task By* : `stb CATEGORY` +
 e.g. `stb datetime` +
 * *Help* : `help` +
-* *Select* : `s INDEX` +
-e.g.`s 2` +
 * *History* : `h` +
 * *Undo* : `u` +
 * *Redo* : `r`

@@ -15,7 +15,7 @@ The user interacts with it using a CLI, and it has a GUI created with JavaFX. It
 == Summary of contributions
 
 * *Major enhancement*: integrated https://github.com/CS2103JAN2018-T11-B1/main/pull/95[*CalendarFX*] into the application
-** What it does: has a calendar that reflects all scheduling commands that the user inputs.
+** What it does: has a calendar that reflects all the task entries and respond to all scheduling commands that the user inputs.
 ** Credits: [https://github.com/dlemmermann/CalendarFX[CalendarFX]]
 
 * *Minor enhancement*:

@@ -23,6 +23,7 @@ public class TuteeBuilder extends PersonBuilder {
     public static final String DEFAULT_GRADE = "C+";
     public static final String DEFAULT_EDUCATION_LEVEL = "secondary";
     public static final String DEFAULT_SCHOOL = "fengshan secondary school";
+    public static final String TUTEE_TAG = "Tutee";
 
     private Subject subject;
     private Grade grade;
@@ -39,7 +40,7 @@ public class TuteeBuilder extends PersonBuilder {
         educationLevel = new EducationLevel(DEFAULT_EDUCATION_LEVEL);
         school = new School(DEFAULT_SCHOOL);
         tags = SampleDataUtil.getTagSet(DEFAULT_TAGS);
-        tags.add(new Tag("Tutee"));
+        tags.add(new Tag(TUTEE_TAG));
     }
 
     /**

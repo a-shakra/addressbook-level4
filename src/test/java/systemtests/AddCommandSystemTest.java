@@ -29,7 +29,6 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 import static seedu.address.testutil.typicaladdressbook.TypicalPersons.ALICE;
 import static seedu.address.testutil.typicaladdressbook.TypicalPersons.AMY;
 import static seedu.address.testutil.typicaladdressbook.TypicalPersons.BOB;
-import static seedu.address.testutil.typicaladdressbook.TypicalPersons.CARL;
 import static seedu.address.testutil.typicaladdressbook.TypicalPersons.HOON;
 import static seedu.address.testutil.typicaladdressbook.TypicalPersons.IDA;
 import static seedu.address.testutil.typicaladdressbook.TypicalPersons.KEYWORD_MATCHING_MEIER;
@@ -37,7 +36,6 @@ import static seedu.address.testutil.typicaladdressbook.TypicalPersons.KEYWORD_M
 import org.junit.Test;
 
 import seedu.address.commons.core.Messages;
-import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.RedoCommand;
 import seedu.address.logic.commands.UndoCommand;
@@ -125,12 +123,6 @@ public class AddCommandSystemTest extends AddressBookSystemTest {
         /* Case: filters the person list before adding -> added */
         showPersonsWithName(KEYWORD_MATCHING_MEIER);
         assertCommandSuccess(IDA);
-
-        /* ------------------------ Perform add operation while a person card is selected --------------------------- */
-
-        /* Case: selects first card in the person list, add a person -> added, card selection remains unchanged */
-        selectPerson(Index.fromOneBased(1));
-        assertCommandSuccess(CARL);
 
         /* ----------------------------------- Perform invalid add operations --------------------------------------- */
 
@@ -259,12 +251,6 @@ public class AddCommandSystemTest extends AddressBookSystemTest {
         /* Case: filters the person list before adding -> added */
         showPersonsWithName(KEYWORD_MATCHING_MEIER);
         assertCommandSuccess(IDA);
-
-        /* ------------------------ Perform add operation while a person card is selected --------------------------- */
-
-        /* Case: selects first card in the person list, add a person -> added, card selection remains unchanged */
-        selectPerson(Index.fromOneBased(1));
-        assertCommandSuccess(CARL);
 
         /* ----------------------------------- Perform invalid add operations --------------------------------------- */
 

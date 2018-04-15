@@ -49,16 +49,6 @@ public class TaskBuilder {
     }
 
     /**
-     * Initializes the TaskBuilder with the data of a given {@code Personal Task}.
-     */
-    public TaskBuilder(PersonalTask taskToCopy) {
-        name = null;
-        description = taskToCopy.getDescription();
-        duration = taskToCopy.getDuration();
-        dateAndTime = taskToCopy.getTaskDateTime();
-    }
-
-    /**
      * Sets the {@code name} of the {@code Task} that we are building.
      */
     public TaskBuilder withTuteeName(String name) {

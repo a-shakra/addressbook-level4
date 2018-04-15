@@ -1248,6 +1248,9 @@ An application for storing the contact details.
 [[mainstream-os]] Mainstream OS::
 Windows, Linux, Unix, OS-X
 
+[[natural-language]] Natural Language::
+This refers to some predetermined common terms that may be provided as user input.
+
 [[person]] Person::
 A non tutee contact
 

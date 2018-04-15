@@ -37,7 +37,7 @@ public class SchoolTest {
         // valid school name
         assertTrue(School.isValidSchool("victoria junior college")); // alphabets only
         assertTrue(School.isValidSchool("Victoria Junior College")); // with capital letters
-        assertTrue(School.isValidSchool("The longest name school primary school")); // long subject name
+        assertTrue(School.isValidSchool("The longest name school primary school")); // long school name
     }
 
 }

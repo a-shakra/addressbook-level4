@@ -46,14 +46,12 @@ import static seedu.address.testutil.typicaladdressbook.TypicalPersons.KEYWORD_M
 import static seedu.address.testutil.typicaladdressbook.TypicalTutees.ALICETUTEE;
 import static seedu.address.testutil.typicaladdressbook.TypicalTutees.AMYTUTEE;
 import static seedu.address.testutil.typicaladdressbook.TypicalTutees.BOBTUTEE;
-import static seedu.address.testutil.typicaladdressbook.TypicalTutees.CARLTUTEE;
 import static seedu.address.testutil.typicaladdressbook.TypicalTutees.HOONTUTEE;
 import static seedu.address.testutil.typicaladdressbook.TypicalTutees.IDATUTEE;
 
 import org.junit.Test;
 
 import seedu.address.commons.core.Messages;
-import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.AddTuteeCommand;
 import seedu.address.logic.commands.RedoCommand;
 import seedu.address.logic.commands.UndoCommand;
@@ -81,7 +79,7 @@ public class AddTuteeCommandSystemTest extends AddressBookSystemTest {
 
         /* ------------------------ Perform add operations on the shown unfiltered list ----------------------------- */
 
-        /* Case: add a person without tags to a non-empty address book, command with leading spaces and trailing spaces
+        /* Case: add a tutee without tags to a non-empty address book, command with leading spaces and trailing spaces
          * -> added
          */
         Tutee toAdd = AMYTUTEE;
@@ -128,7 +126,7 @@ public class AddTuteeCommandSystemTest extends AddressBookSystemTest {
                 + SUBJECT_DESC_AMY + GRADE_DESC_AMY + EDUCATION_LEVEL_DESC_AMY + SCHOOL_DESC_AMY + TAG_DESC_FRIEND;
         assertCommandSuccess(command, toAdd);
 
-        /* Case: add a person with all fields same as another person in the address book except address -> added */
+        /* Case: add a tutee with all fields same as another tutee in the address book except address -> added */
         toAdd = new TuteeBuilder().withName(VALID_NAME_AMY).withPhone(VALID_PHONE_AMY).withEmail(VALID_EMAIL_AMY)
                 .withAddress(VALID_ADDRESS_BOB).withSubject(VALID_SUBJECT_AMY).withGrade(VALID_GRADE_AMY)
                 .withEducationLevel(VALID_EDUCATION_LEVEL_AMY).withSchool(VALID_SCHOOL_AMY).withTags(VALID_TAG_FRIEND)
@@ -141,27 +139,21 @@ public class AddTuteeCommandSystemTest extends AddressBookSystemTest {
         deleteAllPersons();
         assertCommandSuccess(ALICETUTEE);
 
-        /* Case: add a person with tags, command with parameters in random order -> added */
+        /* Case: add a tutee with tags, command with parameters in random order -> added */
         toAdd = BOBTUTEE;
         command = AddTuteeCommand.COMMAND_WORD + TAG_DESC_FRIEND + PHONE_DESC_BOB + ADDRESS_DESC_BOB + NAME_DESC_BOB
                 + TAG_DESC_HUSBAND + EMAIL_DESC_BOB + GRADE_DESC_BOB + SUBJECT_DESC_BOB + EDUCATION_LEVEL_DESC_BOB
                 + SCHOOL_DESC_BOB;
         assertCommandSuccess(command, toAdd);
 
-        /* Case: add a person, missing tags -> added */
+        /* Case: add a tutee, missing tags -> added */
         assertCommandSuccess(HOONTUTEE);
 
         /* -------------------------- Perform add operation on the shown filtered list ------------------------------ */
 
-        /* Case: filters the person list before adding -> added */
+        /* Case: filters the contact list before adding -> added */
         showPersonsWithName(KEYWORD_MATCHING_MEIER);
         assertCommandSuccess(IDATUTEE);
-
-        /* ------------------------ Perform add operation while a person card is selected --------------------------- */
-
-        /* Case: selects first card in the person list, add a person -> added, card selection remains unchanged */
-        selectPerson(Index.fromOneBased(1));
-        assertCommandSuccess(CARLTUTEE);
 
         /* ----------------------------------- Perform invalid add operations --------------------------------------- */
 
@@ -301,7 +293,7 @@ public class AddTuteeCommandSystemTest extends AddressBookSystemTest {
     }
 
     /**
-     * Performs the same verification as {@code assertCommandSuccess(String, Person)} except asserts that
+     * Performs the same verification as {@code assertCommandSuccess(String, Tutee)} except asserts that
      * the,<br>
      * 1. Result display box displays {@code expectedResultMessage}.<br>
      * 2. {@code Model}, {@code Storage} and {@code PersonListPanel} equal to the corresponding components in

@@ -142,14 +142,6 @@ public class AddressBook implements ReadOnlyAddressBook {
         tasks.add(t);
     }
 
-    /**
-     * Updates a task to the address book.
-     *
-     */
-    public void updateTask(Task target, Task editedTask) throws TaskNotFoundException {
-        requireNonNull(editedTask);
-        tasks.setTask(target, editedTask);
-    }
     //@@author
     /**
      *  Updates the master tag list to include tags in {@code person} that are not in the list.

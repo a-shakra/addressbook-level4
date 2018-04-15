@@ -8,7 +8,6 @@ import com.calendarfx.model.Entry;
  * Represents a task that person has
  */
 public interface Task {
-    // Consider changing the location of the three string values below
 
     String MESSAGE_DESCRIPTION_CONSTRAINTS = "Tasks Should have a non-empty description";
 
